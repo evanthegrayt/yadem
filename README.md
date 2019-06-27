@@ -1,64 +1,45 @@
-# Dotfiles, plus so much more!
-My dotfiles, plus an installation script with a boat-load of features.
+# Take Control of Your CLI Environment
+A command line interface installation script for your custom environment, with a
+boat-load of features.
 
-It should go without saying, but here be dragons, as this repository contains
-files that you definitely don't want, like my global `.gitconfig` file.
+Note: This repo is currently being refactored. Please either excuse any mistakes
+made in this readme, or better yet, [create an
+issue](https://github.com/evanthegrayt/dotfiles/issues/new)!
 
 ## Rationale
 Ideally, you shouldn't need a script this hefty for installing your
 configuration, as most people only need to get their environment set up once
 per-computer they purchase. However, I regularly have to set up my workflow on
 various VMs and Vagrant boxes, and I got tired of contstantly having to manually
-set up `vim`, `rvm`, `zsh`, `virtualbox`, `vagrant`, `git-lfs`, and the like.
-So, I made a script that does it all for me.
+set up my dotfiles, `vim`, `rvm`, `zsh`, `virtualbox`, `vagrant`, `git-lfs`, and
+the like.  So, I made a script that does it all for me.
 
 ## Installation
-These are my personal configuration files, and I've taken a lot of steps to make
-sure these work on both Linux and BSD, with either `zsh` or `bash` (and `csh`,
-although I don't have much set up for it). I doubt you'd want to clone this
-entire repository just for my files, but if you do, feel free to do so.
-
-What is much more likely, is that you'd want the installation script, which has
-the ability to log changes, backup files, skip installing specified files, clone
-my `vim` config, enable terminal italics, install `oh-my-zsh`, `bash_it` and
-`rvm`, etc.. If this is the case, you should fork the repository, commit your
-own dotfiles to your forked version, and then proceed.
-
-If you want the whole enchilada, clone my repository wherever you want it:
+Clone the repository wherever you want it:
 ```sh
-git clone https://github.com/evanthegrayt/dotfiles.git
+git clone https://github.com/evanthegrayt/cli-env-manager.git
 ```
-...or clone your forked version. Then run the installation script from within
-the repository:
-```sh
-cd dotfiles
-bin/install -f
-```
-This will link the files from `$DOTFILE_DIR` to `$HOME` as dotfiles, unless the
-file is in the `lib/ignore.yml` file. By default, the script won't move or
-overwrite currently-existing files. To change the way existing files are
-handled, see the options under "Handling old dotfiles" in the
-[help documentation](lib/help_menu.txt). There are also a lot of other options,
-including installing a single file, cloning shell frameworks, etc.
-
-Moving the files around is heavily discouraged, as the directory and file
-structure is important for the install script to work properly. Let the script
-do all the work for you; otherwise, why are you cloning this?
 
 ## Features
 Some, but not all, of the features include:
 
-### Logging
-Everything that's done by the install script is logged, whether it's
-installation of programs or linking of files. There will be a log file for every
-day the `bin/install` script is run, and these will be located in the `log/`
-directory, along with timestamps. You can print the log file for today's date
-using `bin/install -p`. To print an older log file, run `bin/install -P [DATE]`.
-To get a list of log files, run `bin/install -l`
+### Dotfile Installation
+Running `bin/install -f` will link the files from `$DOTFILE_DIR` to `$HOME` as
+dotfiles, unless the file is in the `lib/ignore.yml` file. `DOTFILE_DIR` can be
+changed in the [constants file](lib/constants.sh). Currently, the files must not
+start with a dot; when it links them to the home directory, it will add the dot
+automatically. This is by design, as I didn't want to have a repository of
+hidden files.
+
+By default, the script won't move or overwrite currently-existing
+files. To change the way existing files are handled, see the options under
+"Handling old dotfiles" in the [help documentation](lib/help_menu.txt). There
+are also a lot of other options, including installing a single file, cloning
+shell frameworks, etc.
 
 ### "Local" Config Files
 There are settings I have that are specifically for work that I didn't want
-to publicly commit, so I have added a feature to deal with this issue. If a
+to commit to a public repository, so I have added a feature to deal with this issue. If a
 file exists in your home directory with the same name, but has a `.local`
 extension, that file will be sourced *after* the file from the repository is
 loaded. This allows for overriding settings from the files in the repository.
@@ -80,8 +61,16 @@ installed with [brew](config/brew_taps.yml) or [brew
 cask](config/brew_casks.yml).
 
 ### Ruby Gems
-You can add ruby gems to [a file](config/ruby_gems.yml) and install them
-with `-g`.
+You can add ruby gems to [a file](config/ruby_gems.yml) and install them with
+`-g`. This might be changed to use a `Gemfile` at some point.
+
+### Logging
+Everything that's done by the install script is logged, whether it's
+installation of programs or linking of files. There will be a log file for every
+day the `bin/install` script is run, and these will be located in the `log/`
+directory, along with timestamps. You can print the log file for today's date
+using `bin/install -p`. To print an older log file, run `bin/install -P [DATE]`.
+To get a list of log files, run `bin/install -l`.
 
 ### Constants
 If you're careful, you can edit the [constants file](lib/constants.sh). I've
@@ -97,17 +86,11 @@ all the files in the `backup` directory to your `$HOME` directory before
 removing the entire repository.
 
 ## FAQ
-#### Where are your vim runtime files?
-Vim supports keeping your `vimrc` within your `.vim` directory itself, and I
-have a separate repository for all my `vim` files. You can see them
-[here](https://github.com/evanthegrayt/vimfiles).
-
-#### What about other repositories, like oh-my-zsh? Why not use submodules?
-
+#### Why not use submodules?
 I tried keeping repositories in here as submodules (such as `vim`, `oh-my-zsh`,
-etc.), but I didn't like it, as I wanted more control over what gets installed.
-Having the option to install these other repositories via the `install` script
-seemed like the best compromise.
+etc.), but I didn't like it, as I wanted more control over what gets installed
+from system to system. Having the option to install these other repositories via
+the `install` script seemed like the best compromise.
 
 ## Disclaimers
 Obviously, the dotfiles in the `$DOTFILE_DIR` directory are set up for my
@@ -120,11 +103,9 @@ old dotfiles, but it IS possible to delete your old files. As I've said, I
 your files to the `$DOTFILE_DIR` directory.
 
 ## Reporting Bugs
-When it comes to the config files, a "bug" for you is probably not a "bug" for
-me. However, there could be issues with the install script, so if you see one,
-please let me know by
+If issues are found, please 
 [creating an issue in the
-repository](https://github.com/evanthegrayt/dotfiles/issues/new)
+repository](https://github.com/evanthegrayt/cli-env-manager/issues/new)
 detailing the problem. If it's an issue, I'll fix it; otherwise, if it's a
 configuration preference, I suggest that you fork the repository and add your
 own customizations.
