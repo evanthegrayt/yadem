@@ -1,0 +1,15 @@
+# Gems I want installed for ruby.
+- rails
+- bundler
+- rake
+- rspec
+- ripper-tags
+- rubocop
+- rdoc
+- rubylexer
+- vim
+- pry
+- pry-theme
+- pry-coolline
+- pry-editline
+
