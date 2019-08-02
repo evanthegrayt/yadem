@@ -11,6 +11,13 @@ abort() {
     exit 1
 }
 
+print_help() {
+    echo $USAGE
+    echo "$( < $INSTALL_PATH/lib/help_menu.txt )"
+
+    exit 0
+}
+
 array_includes() {
     local match="$1"
     local element
@@ -21,28 +28,25 @@ array_includes() {
     return 1
 }
 
-print_help() {
-    echo $USAGE
-    echo "$( < $INSTALL_PATH/lib/help_menu.txt )"
-
-    exit 0
-}
-
 is_ignored() {
     local file="$1"
+    local f
 
-    grep -q "^\s*-\s*$file\s*$" $INSTALL_PATH/config/ignore.yml
+    if [[ -z $IGNORE ]]; then
+        return 1
+    fi
+
+    for f in "${IGNORE[@]}"; do
+        if [[ $f == $file ]]; then
+            return 0
+        fi
+    done
+
+    return 1
 }
-
-read_yaml() {
-    local file=$1
-
-    grep '^\s*-' $INSTALL_PATH/config/$file.yml | cut -d' ' -f2-
-}
-
 
 git_directory_is_clean() {
-    # TODO this isn't working properly now... weird.
+    # FIXME this isn't working properly now... weird.
     # taken from https://www.spinics.net/lists/git/msg142043.html
     # Update the index
     local err=0
@@ -70,25 +74,11 @@ git_directory_is_clean() {
     return $err
 }
 
-validate_constants() {
-    local not_set=()
-    local const
+validate_constant() {
+    local const=$1
 
-    for const in ${CONSTANTS[@]}; do
-        [[ -z ${!const} ]] && not_set+=($const)
-    done
-
-    if (( ${#not_set[@]} == 0 )); then
-        return 0
+    if [[ -z ${!const} ]]; then
+        abort "$const must be set in $RC_FILE to use this functionality!"
     fi
-    log "${not_set[@]} must all be set in '$INSTALL_PATH/config/constants.sh'" \
-        ' for all features to work properly!'
-    printf "Continue anyway? (y/n): "
-    read
-    case $REPLY in
-        y|Y) log 'User chose to continue.'   ;;
-        n|N) exit                            ;;
-        *)   abort 'Invalid input. Exiting.' ;;
-    esac
 }
 
