@@ -1,6 +1,6 @@
 # Yet Another Dotfile and Environment Manager
-A command line interface installation script for your custom environment, with a
-boat-load of features.
+A command line interface installation script for your custom Mac/Linux
+environment, with a boat-load of features.
 
 ## Rationale
 Ideally, you shouldn't need a script this hefty for installing your
