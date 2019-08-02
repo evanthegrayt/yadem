@@ -11,20 +11,20 @@ clone_shell_framework() {
 
     if [[ -d $directory ]]; then
         log "$directory already exists."
-        return 1
+    else
+        log "Installing $directory from $url"
+        git clone $url $directory
     fi
-
-    log "Installing $directory from $url"
-    git clone $url $directory
 
     if [[ -z $custom_url ]]; then
         log "No custom directory set $directory."
-        return 1
+    else
+        if [[ -d $directory/custom ]]; then
+            rm -rf $directory/custom
+        fi
+        log "Installing $directory/custom from $custom_url"
+        git clone --recursive $custom_url $directory/custom
     fi
-
-    rm -rf $directory/custom
-    log "Installing $directory/custom from $custom_url"
-    git clone --recursive $custom_url $directory/custom
 }
 
 install_mac_work_stuff() {
@@ -44,8 +44,11 @@ install_mac_work_stuff() {
     xcode-select --install
     log "Installing Homebrew"
     /usr/bin/ruby -e $( curl -fsSL $BREW )
-    log "Installing rvm"
-    'curl' -sSL https://get.rvm.io | bash -s stable
+
+    if ! which -s rvm >/dev/null; then
+        log "Installing rvm"
+        'curl' -sSL https://get.rvm.io | bash -s stable
+    fi
 
     # TODO Dry this up.
     if (( ${#BREW_TAPS[@]} == 0 )); then
@@ -71,17 +74,12 @@ clone_github_stuff() {
     local repo
     local repo_name
 
-    if (( ${#GIT_REPOS[@]} == 0 )); then
-        log 'No git repos to install.'
-        return 1
-    elif [[ -z $REPO_DIR ]]; then
-        log "REPO_DIR not set. Script doesn't know where to clone repos."
-        return 1
-    fi
-
     for repo in "${GIT_REPOS[@]}"; do
         repo_name=${repo##*/}
-        [[ -d "$REPO_DIR/$repo_name" ]] && continue
+        if [[ -d "$REPO_DIR/$repo_name" ]]; then
+            log "$repo is already cloned in $REPO_DIR"
+            continue
+        fi
         log "Cloning $repo"
         git clone "$repo.git" "$REPO_DIR/$repo_name"
         # TODO clean this up, and allow for more stuff, maybe `bundle install`.
@@ -103,13 +101,8 @@ clone_github_stuff() {
 install_ruby_gems() {
     local gem
 
-    if (( ${#GEMS[@]} == 0 )); then
-        log 'No gems to install.'
-        return 1
-    fi
-
     # TODO probably create a Gemfile instad of this and run bundle install?
-    for gem in ${GEMS[@]}; do
+    for gem in ${RUBY_GEMS[@]}; do
         gem install $gem
         log "Installing ruby gem [$gem]"
     done

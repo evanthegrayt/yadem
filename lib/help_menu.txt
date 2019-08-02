@@ -5,7 +5,7 @@ Install options (must pass at least one of these options)
   -v         | Install vimfiles
   -z         | Install 'oh-my-zsh'
   -b         | Install 'bash-it'
-  -c         | Install git repositories in config/git_repos.yml
+  -c         | Install git repositories in GIT_REPOS array
   -m         | Install MacOS files I need for work, such as
              + rvm, command-line-tools, homebrew, git-lfs, virtualbox, vagrant
 

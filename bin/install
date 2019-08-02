@@ -11,32 +11,21 @@ shopt -s nullglob
 readonly INSTALL_PATH="$( cd $( dirname $0 )/../ && pwd -P )"
 
 source $INSTALL_PATH/lib/install_script_helpers.sh
-source $INSTALL_PATH/lib/constants.sh
 source $INSTALL_PATH/lib/logging.sh
 source $INSTALL_PATH/lib/dotfiles.sh
 source $INSTALL_PATH/lib/externals.sh
-
+if [[ -f $HOME/.yademrc ]]; then
+    readonly RC_FILE="$HOME/.yademrc"
+else
+    readonly RC_FILE="$INSTALL_PATH/config/yademrc"
+fi
+source $RC_FILE
 readonly USAGE="USAGE: ${0##*/} [OPTIONS]"
 readonly LOGFILE="$INSTALL_PATH/log/dotfiles.${LOGFILE_DATESTAMP}.log"
 readonly BREW='https://raw.githubusercontent.com/Homebrew/install/master/install'
 readonly OS="$( uname -s )"
-readonly BREW_TAPS=($( read_yaml brew_taps ))
-readonly BREW_CASKS=($( read_yaml brew_casks ))
-readonly LOCAL_FILES=($( read_yaml local_files ))
-readonly GIT_REPOS=($( read_yaml git_repos ))
-readonly RUBY_GEMS=($( read_yaml ruby_gems ))
-readonly CONSTANTS=(
-VIM_REPO
-ZSH_CUSTOM_REPO
-BASH_CUSTOM_REPO
-REPO_DIR
-SCREENSHOT_DIR
-LOGFILE_TIMESTAMP
-LOGFILE_DATESTAMP
-)
 
-validate_constants
-
+INSTALL_GEMS=false
 PRINT_LOG=false
 ENABLE_ITALICS=false
 INSTALL_DOTFILES=false
@@ -50,24 +39,19 @@ BACKUP=false
 ALLOW_IGNORED=false
 LOCAL=false
 CLONE_GITHUB_STUFF=false
-INSTALL_GEMS=false
 LIST_LOGFILES=false
-LOGFILE_DATE_TO_PRINT=$LOGFILE_DATESTAMP
+LOGFILE_DATE_TO_PRINT="$LOGFILE_DATESTAMP"
 
 while getopts 'lpP:gcauLfvzbrRBimC:U:F:h' opt; do
     case $opt in
-        a)  ALLOW_IGNORED=true                ;;
-        u)  UNINSTALL_DOTFILES=true           ;;
-        f)  INSTALL_DOTFILES=true             ;;
-        v)  INSTALL_VIM=true                  ;;
-        z)  INSTALL_ZSH=true                  ;;
-        b)  INSTALL_BASH=true                 ;;
-        R)  REINSTALL_OLD_DOTFILES=true       ;;
-        B)  EXTENSION=$( date +%Y%m%d%H%M%S ) ;;
-        i)  ENABLE_ITALICS=true               ;;
-        m)  INSTALL_MAC_WORK_STUFF=true       ;;
-        c)  CLONE_GITHUB_STUFF=true           ;;
-        g)  INSTALL_GEMS=true                 ;;
+        l)  LIST_LOGFILES=true                           ;;
+        a)  ALLOW_IGNORED=true                           ;;
+        z)  INSTALL_ZSH=true                             ;;
+        b)  INSTALL_BASH=true                            ;;
+        R)  REINSTALL_OLD_DOTFILES=true                  ;;
+        B)  EXTENSION="$( date +%Y%m%d%H%M%S )"          ;;
+        i)  ENABLE_ITALICS=true                          ;;
+        m)  INSTALL_MAC_WORK_STUFF=true                  ;;
         C)
             CHANGE_SHELL=$OPTARG
             case $CHANGE_SHELL in
@@ -77,7 +61,29 @@ while getopts 'lpP:gcauLfvzbrRBimC:U:F:h' opt; do
                 *) abort "Must pass '-C [bash|zsh|csh]'" ;;
             esac
             ;;
+        u)
+            validate_constant DOTFILE_DIR
+            UNINSTALL_DOTFILES=true
+            ;;
+        f)
+            validate_constant DOTFILE_DIR
+            INSTALL_DOTFILES=true
+            ;;
+        v)
+            validate_constant VIM_REPO
+            INSTALL_VIM=true
+            ;;
+        c)
+            validate_constant REPO_DIR
+            validate_constant GIT_REPOS
+            CLONE_GITHUB_STUFF=true
+            ;;
+        g)
+            validate_constant RUBY_GEMS
+            INSTALL_GEMS=true
+            ;;
         U)
+            validate_constant DOTFILE_DIR
             UNINSTALL_SINGLE=$OPTARG
             if [[ $UNINSTALL_SINGLE =~ ^\. ]]; then
                 UNINSTALL_SINGLE=${UNINSTALL_SINGLE#*.}
@@ -85,6 +91,7 @@ while getopts 'lpP:gcauLfvzbrRBimC:U:F:h' opt; do
             ;;
         F)
             SINGLE_FILE=$OPTARG
+            validate_constant DOTFILE_DIR
             if [[ $SINGLE_FILE =~ ^\. ]]; then
                 SINGLE_FILE=${SINGLE_FILE#*.}
             fi
@@ -103,9 +110,8 @@ while getopts 'lpP:gcauLfvzbrRBimC:U:F:h' opt; do
             PRINT_LOG=true
             LOGFILE_DATE_TO_PRINT=$OPTARG
             ;;
-        l) LIST_LOGFILES=true ;;
-        h) print_help         ;;
-        *) abort "$USAGE"     ;;
+        h)  print_help                                   ;;
+        *)  abort "$USAGE"                               ;;
     esac
 done
 
@@ -119,12 +125,17 @@ elif $INSTALL_DOTFILES && $UNINSTALL_DOTFILES; then
     abort "$USAGE\nCannot install and uninstall at the same time..."
 fi
 
-if [[ -n $UNINSTALL_SINGLE ]]; then
-    unlink_dotfile "$UNINSTALL_SINGLE"
-elif $UNINSTALL_DOTFILES; then
-    for file in $DOTFILE_DIR/*; do
-        unlink_dotfile "$file"
-    done
+if $INSTALL_MAC_WORK_STUFF; then
+    if [[ "$OS" == 'Darwin' ]]; then
+        install_mac_work_stuff
+    else
+        log "Not on MacOS. Skipping installation of Mac-specific packages."
+    fi
+fi
+
+if $CLONE_GITHUB_STUFF; then
+    [[ -d $REPO_DIR ]] || mkdir $REPO_DIR
+    clone_github_stuff
 fi
 
 if [[ -n $CHANGE_SHELL ]]; then
@@ -136,6 +147,14 @@ if [[ -n $CHANGE_SHELL ]]; then
     else
         log "Cannot change shell; $shell executable not found."
     fi
+fi
+
+if [[ -n $UNINSTALL_SINGLE ]]; then
+    unlink_dotfile "$UNINSTALL_SINGLE"
+elif $UNINSTALL_DOTFILES; then
+    for file in $DOTFILE_DIR/*; do
+        unlink_dotfile "$file"
+    done
 fi
 
 if [[ -n $SINGLE_FILE ]]; then
@@ -150,24 +169,16 @@ elif $INSTALL_DOTFILES; then
     fi
 fi
 
-if $INSTALL_MAC_WORK_STUFF; then
-    if [[ "$OS" == 'Darwin' ]]; then
-        install_mac_work_stuff
-    else
-        log "Not on MacOS. Skipping installation of Mac-specific packages."
-    fi
-fi
-
 if $ENABLE_ITALICS; then
-    log "Enabling italics; sourcing xterm-256color.terminfo"
-    tic $DOTFILE_DIR/xterm-256color.terminfo
+    if [[ -f $DOTFILE_DIR/xterm-256color.terminfo ]]; then
+        log "Enabling italics; sourcing xterm-256color.terminfo"
+        tic $DOTFILE_DIR/xterm-256color.terminfo
+    else
+        log "Italics not enabled; no $DOTFILE_DIR/xterm-256color.terminfo exists"
+    fi
 fi
 
 if $INSTALL_VIM; then
-    if [[ -z $VIM_REPO ]]; then
-        log '$VIM_REPO is not set. Nothing to do.'
-        return 1
-    fi
     if [[ -d $HOME/.vim ]]; then
         if [[ -n $EXTENSION ]]; then
             log "$HOME/.vim exists; moving to $HOME/.vim.$EXTENSION"
@@ -187,11 +198,6 @@ fi
 if $INSTALL_BASH; then
     clone_shell_framework $HOME/.bash_it \
         https://github.com/Bash-it/bash-it.git $BASH_CUSTOM_REPO
-fi
-
-if $CLONE_GITHUB_STUFF; then
-    [[ -d $REPO_DIR ]] || mkdir $REPO_DIR
-    clone_github_stuff
 fi
 
 if $INSTALL_GEMS; then
