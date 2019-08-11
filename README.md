@@ -17,12 +17,21 @@ git clone https://github.com/evanthegrayt/yadem.git
 ```
 
 ## Features
+### Config File
 This script reads a [config file](config/yademrc). This file contains all of my
 preferred configurations. If you'd like to change anything, you can copy the
-file to `~/.yademrc`, and change whatever values you'd like. Currently, if
-`~/.yademrc` exists, that file will be sourced, while `config/yademrc` will not
-be sourced at all. If people would rather just have `~/.yademrc` sourced *after*
-`config/yademrc`, that would be easy enough to implement, so just let me know.
+file to `~/.yademrc`, and change whatever values you'd like.
+
+The biggest appeal to this script is the dotfile installation aspect, so
+requiring a dotfile to be located in your home directory for installation can be
+counter-intuitive. For this reason, you can pass the config file with `-r
+/path/to/config_file`. Note that the config file must still be called either
+`yademrc` or `.yademrc`.
+
+Currently, if a custom `yademrc` file is passed, that file will be sourced,
+while `config/yademrc` will not be sourced at all. If people would rather just
+have `~/.yademrc` sourced *after* `config/yademrc`, that would be easy enough to
+implement, so just let me know.
 
 ### Dotfile Installation
 Running `bin/install -f` will link the files from `$DOTFILE_DIR` to `$HOME` as

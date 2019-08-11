@@ -14,12 +14,6 @@ source $INSTALL_PATH/lib/install_script_helpers.sh
 source $INSTALL_PATH/lib/logging.sh
 source $INSTALL_PATH/lib/dotfiles.sh
 source $INSTALL_PATH/lib/externals.sh
-if [[ -f $HOME/.yademrc ]]; then
-    readonly RC_FILE="$HOME/.yademrc"
-else
-    readonly RC_FILE="$INSTALL_PATH/config/yademrc"
-fi
-source $RC_FILE
 readonly USAGE="USAGE: ${0##*/} [OPTIONS]"
 readonly LOGFILE="$INSTALL_PATH/log/dotfiles.${LOGFILE_DATESTAMP}.log"
 readonly BREW='https://raw.githubusercontent.com/Homebrew/install/master/install'
@@ -42,7 +36,7 @@ CLONE_GITHUB_STUFF=false
 LIST_LOGFILES=false
 LOGFILE_DATE_TO_PRINT="$LOGFILE_DATESTAMP"
 
-while getopts 'lpP:gcauLfvzbrRBimC:U:F:h' opt; do
+while getopts 'r:lpP:gcauLfvzbrRBimC:U:F:h' opt; do
     case $opt in
         l)  LIST_LOGFILES=true                           ;;
         a)  ALLOW_IGNORED=true                           ;;
@@ -60,6 +54,14 @@ while getopts 'lpP:gcauLfvzbrRBimC:U:F:h' opt; do
                 c|csh)  CHANGE_SHELL='csh'               ;;
                 *) abort "Must pass '-C [bash|zsh|csh]'" ;;
             esac
+            ;;
+        r)
+            RC_FILE=$OPTARG
+            if [[ ! -f $RC_FILE ]]; then
+                abort "File [$RC_FILE] does not exist. Exiting."
+            elif [[ $RC_FILE != *yademrc ]]; then
+                abort "File [$RC_FILE] must be named '.yademrc' or 'yademrc'"
+            fi
             ;;
         u)
             validate_constant DOTFILE_DIR
@@ -114,6 +116,16 @@ while getopts 'lpP:gcauLfvzbrRBimC:U:F:h' opt; do
         *)  abort "$USAGE"                               ;;
     esac
 done
+
+if [[ -z $RC_FILE ]]; then
+    if [[ -f $HOME/.yademrc ]]; then
+        RC_FILE="$HOME/.yademrc"
+    else
+        RC_FILE="$INSTALL_PATH/config/yademrc"
+    fi
+fi
+
+source "$RC_FILE"
 
 if (( $# == 0 )); then
     abort "$USAGE"
