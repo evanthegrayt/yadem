@@ -36,6 +36,13 @@ CLONE_GITHUB_STUFF=false
 LIST_LOGFILES=false
 LOGFILE_DATE_TO_PRINT="$LOGFILE_DATESTAMP"
 
+if [[ -f $HOME/.yademrc ]]; then
+RC_FILE="$HOME/.yademrc"
+else
+RC_FILE="$INSTALL_PATH/config/yademrc"
+fi
+source $RC_FILE
+
 while getopts 'r:lpP:gcauLfvzbrRBimC:U:F:h' opt; do
     case $opt in
         l)  LIST_LOGFILES=true                           ;;
@@ -117,13 +124,7 @@ while getopts 'r:lpP:gcauLfvzbrRBimC:U:F:h' opt; do
     esac
 done
 
-if [[ -z $RC_FILE ]]; then
-    if [[ -f $HOME/.yademrc ]]; then
-        RC_FILE="$HOME/.yademrc"
-    else
-        RC_FILE="$INSTALL_PATH/config/yademrc"
-    fi
-fi
+echo $RC_FILE
 
 source "$RC_FILE"
 
