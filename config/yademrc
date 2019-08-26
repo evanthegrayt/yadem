@@ -43,6 +43,8 @@ most
 diff-so-fancy
 python
 ipython
+source-highlight
+mycli
 )
 
 # Programs to install using `brew cask install`.

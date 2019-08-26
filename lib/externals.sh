@@ -43,7 +43,7 @@ install_mac_work_stuff() {
     log "Installing xcode command line tools"
     xcode-select --install
     log "Installing Homebrew"
-    /usr/bin/ruby -e $( curl -fsSL $BREW )
+    /usr/bin/ruby -e $( curl -fsSL "$BREW" )
 
     if ! which -s rvm >/dev/null; then
         log "Installing rvm"
@@ -54,7 +54,7 @@ install_mac_work_stuff() {
     if (( ${#BREW_TAPS[@]} == 0 )); then
         log 'No brew taps to install.'
     else
-        for tap in ${BREW_TAPS[@]}; do
+        for tap in "${BREW_TAPS[@]}"; do
             log "Installing [$tap] with brew"
             brew install $tap
         done
@@ -63,7 +63,7 @@ install_mac_work_stuff() {
     if (( ${#BREW_CASKS[@]} == 0 )); then
         log 'No brew casks to install.'
     else
-        for cask in ${BREW_CASKS[@]}; do
+        for cask in "${BREW_CASKS[@]}"; do
             log "Installing [$cask] with brew cask"
             brew cask install $cask
         done
