@@ -45,6 +45,7 @@ python
 ipython
 source-highlight
 mycli
+colordiff
 )
 
 # Programs to install using `brew cask install`.
