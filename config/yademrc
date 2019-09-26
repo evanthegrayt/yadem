@@ -50,6 +50,7 @@ colordiff
 
 # Programs to install using `brew cask install`.
 BREW_CASKS=(
+java
 slack
 virtualbox
 vagrant
@@ -58,6 +59,7 @@ firefox
 alfred
 mattermost
 macvim
+dbeaver-community
 )
 
 # Ruby gems to install.
