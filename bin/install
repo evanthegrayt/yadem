@@ -37,9 +37,9 @@ LIST_LOGFILES=false
 LOGFILE_DATE_TO_PRINT="$LOGFILE_DATESTAMP"
 
 if [[ -f $HOME/.yademrc ]]; then
-RC_FILE="$HOME/.yademrc"
+    RC_FILE="$HOME/.yademrc"
 else
-RC_FILE="$INSTALL_PATH/config/yademrc"
+    RC_FILE="$INSTALL_PATH/config/yademrc"
 fi
 source $RC_FILE
 
@@ -123,8 +123,6 @@ while getopts 'r:lpP:gcauLfvzbrRBimC:U:F:h' opt; do
         *)  abort "$USAGE"                               ;;
     esac
 done
-
-echo $RC_FILE
 
 source "$RC_FILE"
 
