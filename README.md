@@ -125,7 +125,7 @@ Notable settings:
 - `YADEM_DOTFILES_DIR`: source directory for the `dotfiles` target
 - `YADEM_DOTFILES_REPO`: git repository cloned when dotfiles are missing
 - `YADEM_DOTFILES_REPO_DIR`: local clone destination for `YADEM_DOTFILES_REPO`
-- `YADEM_DOTFILES_IGNORE`: dotfile source names to skip
+- `YADEM_DOTFILES_IGNORE`: dotfile source names to skip unless explicitly included
 - `YADEM_LOCALIZE_EXISTING`: link supported backups back as `~/.name.local`
 - `YADEM_LOCAL_FILES`: dotfiles eligible for `.local` preservation
 - `YADEM_REPO_DIR`: clone destination for `repos`
@@ -164,6 +164,14 @@ Pass a single file as `name` or `.name` to install only that dotfile:
 ```sh
 bin/yadem dotfiles zshrc
 bin/yadem dotfiles .zshrc
+```
+
+Files listed in `YADEM_DOTFILES_IGNORE` are skipped by default. Pass
+`--include-ignored` to link ignored files explicitly, including in single-file
+mode:
+
+```sh
+bin/yadem dotfiles --include-ignored README.md
 ```
 
 Existing symlinks are replaced. Existing regular files are moved to
