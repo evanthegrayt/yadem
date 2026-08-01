@@ -1,4 +1,8 @@
 # yadem
+[![Language: Bash](https://img.shields.io/static/v1?label=language&message=Bash&color=4EAA25&style=flat&logo=gnubash&logoColor=white)](https://www.gnu.org/software/bash/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Completions: zsh | bash](https://img.shields.io/static/v1?label=completions&message=zsh%20%7C%20bash&color=4EAA25&style=flat&logo=shell&logoColor=white)](#usage)
+[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fevanthegrayt%2Fcdc%2Fbadge%3Fref%3Dmaster&style=flat)](https://actions-badge.atrox.dev/evanthegrayt/cdc/goto?ref=master)
 
 Yet Another Dotfile and Environment Manager.
 
