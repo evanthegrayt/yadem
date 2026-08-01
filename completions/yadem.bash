@@ -1,4 +1,5 @@
 # Bash completion for yadem.
+# shellcheck shell=bash disable=SC2207
 
 _yadem_completion() {
     local cur

@@ -109,6 +109,16 @@ write_yadem_config() {
     [[ ! -e "$TEST_DOTFILES_REPO" ]]
 }
 
+@test "dotfiles repo path follows configured repo dir" {
+    write_yadem_config "YADEM_REPO_DIR=\"$TEST_HOME/custom-workflow\""
+
+    run_yadem --test dotfiles
+
+    assert_success
+    assert_output_contains "Would clone https://github.com/evanthegrayt/dotfiles.git to $TEST_HOME/custom-workflow/dotfiles"
+    [[ ! -e "$TEST_HOME/custom-workflow/dotfiles" ]]
+}
+
 @test "dotfiles install links missing files" {
     setup_test_dotfiles_repo
 
@@ -253,6 +263,19 @@ SH
     assert_output_contains "Would install gem: example_gem"
     assert_file_contains "$TEST_CACHE/yadem/install.log" "all running-target Running target: gems"
     assert_file_contains "$TEST_CACHE/yadem/install.log" "gems would-install Would install gem: example_gem"
+}
+
+@test "--all dry-run can plan dotfiles-dependent targets on a fresh home" {
+    write_yadem_config "YADEM_ALL_TARGETS=(italics dotfiles)"
+
+    run_yadem --test --all
+
+    assert_success
+    assert_output_contains "Running target: italics"
+    assert_output_contains "Would clone https://github.com/evanthegrayt/dotfiles.git to $TEST_DOTFILES_REPO"
+    assert_output_contains "Would run tic $TEST_DOTFILES_DIR/xterm-256color.terminfo"
+    assert_output_contains "Running target: dotfiles"
+    assert_file_contains "$TEST_CACHE/yadem/install.log" "italics would-run"
 }
 
 @test "repos dry-run uses configured repositories" {

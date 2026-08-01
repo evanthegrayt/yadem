@@ -1,9 +1,10 @@
+# shellcheck shell=bash disable=SC2034
 # Default yadem configuration. Copy to ~/.yademrc and adjust locally.
 
 YADEM_REPO_DIR="${YADEM_REPO_DIR:-$HOME/workflow}"
 YADEM_DOTFILES_REPO="${YADEM_DOTFILES_REPO:-https://github.com/evanthegrayt/dotfiles}"
-YADEM_DOTFILES_REPO_DIR="${YADEM_DOTFILES_REPO_DIR:-$YADEM_REPO_DIR/dotfiles}"
-YADEM_DOTFILES_DIR="${YADEM_DOTFILES_DIR:-$YADEM_DOTFILES_REPO_DIR/dotfiles}"
+# YADEM_DOTFILES_REPO_DIR defaults to $YADEM_REPO_DIR/dotfiles after config loads.
+# YADEM_DOTFILES_DIR defaults to $YADEM_DOTFILES_REPO_DIR/dotfiles after config loads.
 
 YADEM_VIM_REPO="${YADEM_VIM_REPO:-https://github.com/evanthegrayt/vimfiles.git}"
 YADEM_ZSH_REPO="${YADEM_ZSH_REPO:-https://github.com/ohmyzsh/ohmyzsh.git}"

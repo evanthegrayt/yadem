@@ -1,53 +1,5 @@
 #!/usr/bin/env bash
 
-ensure_dotfiles_source() {
-    local clone_url
-
-    if [[ -d "$YADEM_DOTFILES_DIR" ]]; then
-        return
-    fi
-
-    if [[ -z "$YADEM_DOTFILES_REPO" ]]; then
-        say_and_log missing-dotfiles-repo "YADEM_DOTFILES_REPO is not configured"
-        return 1
-    fi
-
-    clone_url="$(git_clone_url_for "$YADEM_DOTFILES_REPO")"
-
-    if [[ "$DRY_RUN" == true ]]; then
-        if [[ -e "$YADEM_DOTFILES_REPO_DIR" && ! -d "$YADEM_DOTFILES_REPO_DIR/.git" ]]; then
-            say_and_log invalid-dotfiles-repo-dir "Dotfiles repository path exists but is not a git repository: $YADEM_DOTFILES_REPO_DIR"
-            return 1
-        fi
-
-        if [[ -d "$YADEM_DOTFILES_REPO_DIR/.git" ]]; then
-            say_and_log missing-dotfiles-dir "Dotfiles directory not found in repository: $YADEM_DOTFILES_DIR"
-            return 1
-        fi
-
-        say_and_log would-clone "Would clone $clone_url to $YADEM_DOTFILES_REPO_DIR"
-        return 2
-    fi
-
-    require_command git || return
-
-    if [[ -e "$YADEM_DOTFILES_REPO_DIR" && ! -d "$YADEM_DOTFILES_REPO_DIR/.git" ]]; then
-        say_and_log invalid-dotfiles-repo-dir "Dotfiles repository path exists but is not a git repository: $YADEM_DOTFILES_REPO_DIR"
-        return 1
-    fi
-
-    if [[ ! -d "$YADEM_DOTFILES_REPO_DIR/.git" ]]; then
-        mkdir -p "$(dirname -- "$YADEM_DOTFILES_REPO_DIR")"
-        say_and_log cloning "Cloning $clone_url to $YADEM_DOTFILES_REPO_DIR"
-        git clone "$clone_url" "$YADEM_DOTFILES_REPO_DIR"
-    fi
-
-    if [[ ! -d "$YADEM_DOTFILES_DIR" ]]; then
-        say_and_log missing-dotfiles-dir "Dotfiles directory not found after clone: $YADEM_DOTFILES_DIR"
-        return 1
-    fi
-}
-
 install() {
     local file
     local filename

@@ -11,23 +11,6 @@ INSTALL_TARGET="${INSTALL_TARGET:-yadem}"
 INSTALL_LOG_WRITTEN=false
 INSTALL_LOG_FAILED=false
 
-YADEM_REPO_DIR="${YADEM_REPO_DIR:-$HOME/workflow}"
-YADEM_DOTFILES_REPO="${YADEM_DOTFILES_REPO:-https://github.com/evanthegrayt/dotfiles}"
-YADEM_DOTFILES_REPO_DIR="${YADEM_DOTFILES_REPO_DIR:-$YADEM_REPO_DIR/dotfiles}"
-YADEM_DOTFILES_DIR="${YADEM_DOTFILES_DIR:-$YADEM_DOTFILES_REPO_DIR/dotfiles}"
-YADEM_VIM_REPO="${YADEM_VIM_REPO:-https://github.com/evanthegrayt/vimfiles.git}"
-YADEM_ZSH_REPO="${YADEM_ZSH_REPO:-https://github.com/ohmyzsh/ohmyzsh.git}"
-YADEM_ZSH_CUSTOM_REPO="${YADEM_ZSH_CUSTOM_REPO:-https://github.com/evanthegrayt/oh-my-zsh-custom.git}"
-YADEM_BASH_REPO="${YADEM_BASH_REPO:-https://github.com/Bash-it/bash-it.git}"
-YADEM_BASH_CUSTOM_REPO="${YADEM_BASH_CUSTOM_REPO:-https://github.com/evanthegrayt/bash-it-custom.git}"
-YADEM_SCREENSHOT_DIR="${YADEM_SCREENSHOT_DIR:-$HOME/Pictures/Screenshots}"
-YADEM_ALL_TARGETS=(${YADEM_ALL_TARGETS:-homebrew brew repos gems vim zsh bash italics dotfiles})
-YADEM_GEMS=(${YADEM_GEMS:-standard spoonerize standup_md})
-YADEM_REPOS=(${YADEM_REPOS:-})
-YADEM_LOCAL_FILES=(${YADEM_LOCAL_FILES:-inputrc bashrc shellrc zshrc profile aliases irbrc pryrc cshrc bash_profile})
-YADEM_DOTFILES_IGNORE=(${YADEM_DOTFILES_IGNORE:-README.md LICENSE xterm-256color.terminfo})
-YADEM_LOCALIZE_EXISTING="${YADEM_LOCALIZE_EXISTING:-false}"
-
 list_targets() {
     local target
 
@@ -42,11 +25,47 @@ load_yadem_config() {
     local user_config="${YADEM_CONFIG:-$HOME/.yademrc}"
 
     if [[ -f "$default_config" ]]; then
+        # shellcheck source=config/yademrc
         . "$default_config"
     fi
 
     if [[ -f "$user_config" && "$user_config" != "$default_config" ]]; then
+        # shellcheck disable=SC1090
         . "$user_config"
+    fi
+
+    YADEM_REPO_DIR="${YADEM_REPO_DIR:-$HOME/workflow}"
+    YADEM_DOTFILES_REPO="${YADEM_DOTFILES_REPO:-https://github.com/evanthegrayt/dotfiles}"
+    YADEM_DOTFILES_REPO_DIR="${YADEM_DOTFILES_REPO_DIR:-$YADEM_REPO_DIR/dotfiles}"
+    YADEM_DOTFILES_DIR="${YADEM_DOTFILES_DIR:-$YADEM_DOTFILES_REPO_DIR/dotfiles}"
+    YADEM_VIM_REPO="${YADEM_VIM_REPO:-https://github.com/evanthegrayt/vimfiles.git}"
+    YADEM_ZSH_REPO="${YADEM_ZSH_REPO:-https://github.com/ohmyzsh/ohmyzsh.git}"
+    YADEM_ZSH_CUSTOM_REPO="${YADEM_ZSH_CUSTOM_REPO:-https://github.com/evanthegrayt/oh-my-zsh-custom.git}"
+    YADEM_BASH_REPO="${YADEM_BASH_REPO:-https://github.com/Bash-it/bash-it.git}"
+    YADEM_BASH_CUSTOM_REPO="${YADEM_BASH_CUSTOM_REPO:-https://github.com/evanthegrayt/bash-it-custom.git}"
+    YADEM_SCREENSHOT_DIR="${YADEM_SCREENSHOT_DIR:-$HOME/Pictures/Screenshots}"
+    YADEM_LOGIN_SHELL="${YADEM_LOGIN_SHELL:-}"
+    YADEM_REPO_AUTO_RUN_BUILD="${YADEM_REPO_AUTO_RUN_BUILD:-false}"
+    YADEM_LOCALIZE_EXISTING="${YADEM_LOCALIZE_EXISTING:-false}"
+
+    if ! declare -p YADEM_ALL_TARGETS >/dev/null 2>&1; then
+        YADEM_ALL_TARGETS=(homebrew brew repos gems vim zsh bash italics dotfiles)
+    fi
+
+    if ! declare -p YADEM_GEMS >/dev/null 2>&1; then
+        YADEM_GEMS=(standard spoonerize standup_md)
+    fi
+
+    if ! declare -p YADEM_REPOS >/dev/null 2>&1; then
+        YADEM_REPOS=()
+    fi
+
+    if ! declare -p YADEM_LOCAL_FILES >/dev/null 2>&1; then
+        YADEM_LOCAL_FILES=(inputrc bashrc shellrc zshrc profile aliases irbrc pryrc cshrc bash_profile)
+    fi
+
+    if ! declare -p YADEM_DOTFILES_IGNORE >/dev/null 2>&1; then
+        YADEM_DOTFILES_IGNORE=(README.md LICENSE xterm-256color.terminfo)
     fi
 }
 
@@ -81,6 +100,54 @@ git_clone_url_for() {
     fi
 
     printf "%s\n" "$repo"
+}
+
+ensure_dotfiles_source() {
+    local clone_url
+
+    if [[ -d "$YADEM_DOTFILES_DIR" ]]; then
+        return
+    fi
+
+    if [[ -z "$YADEM_DOTFILES_REPO" ]]; then
+        say_and_log missing-dotfiles-repo "YADEM_DOTFILES_REPO is not configured"
+        return 1
+    fi
+
+    clone_url="$(git_clone_url_for "$YADEM_DOTFILES_REPO")"
+
+    if [[ "$DRY_RUN" == true ]]; then
+        if [[ -e "$YADEM_DOTFILES_REPO_DIR" && ! -d "$YADEM_DOTFILES_REPO_DIR/.git" ]]; then
+            say_and_log invalid-dotfiles-repo-dir "Dotfiles repository path exists but is not a git repository: $YADEM_DOTFILES_REPO_DIR"
+            return 1
+        fi
+
+        if [[ -d "$YADEM_DOTFILES_REPO_DIR/.git" ]]; then
+            say_and_log missing-dotfiles-dir "Dotfiles directory not found in repository: $YADEM_DOTFILES_DIR"
+            return 1
+        fi
+
+        say_and_log would-clone "Would clone $clone_url to $YADEM_DOTFILES_REPO_DIR"
+        return 2
+    fi
+
+    require_command git || return
+
+    if [[ -e "$YADEM_DOTFILES_REPO_DIR" && ! -d "$YADEM_DOTFILES_REPO_DIR/.git" ]]; then
+        say_and_log invalid-dotfiles-repo-dir "Dotfiles repository path exists but is not a git repository: $YADEM_DOTFILES_REPO_DIR"
+        return 1
+    fi
+
+    if [[ ! -d "$YADEM_DOTFILES_REPO_DIR/.git" ]]; then
+        mkdir -p "$(dirname -- "$YADEM_DOTFILES_REPO_DIR")"
+        say_and_log cloning "Cloning $clone_url to $YADEM_DOTFILES_REPO_DIR"
+        git clone "$clone_url" "$YADEM_DOTFILES_REPO_DIR"
+    fi
+
+    if [[ ! -d "$YADEM_DOTFILES_DIR" ]]; then
+        say_and_log missing-dotfiles-dir "Dotfiles directory not found after clone: $YADEM_DOTFILES_DIR"
+        return 1
+    fi
 }
 
 brew_executable() {

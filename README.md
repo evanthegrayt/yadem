@@ -156,12 +156,11 @@ The installer has a Bats test suite. Install `bats-core`, then run:
 
 ```sh
 bats test
+shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/* completions/yadem.bash config/yademrc test/*.bash test/*.bats
 ```
 
-## Migration Notes
+## Development Status
 
-This work started in the dotfiles repository because the new installer shape was
-already here: target scripts, tests, completions, and `Brewfile` support. Once
-the command surface is stable, the installer should move into the real `yadem`
-repository and this repository can return to being only dotfiles and related
-documentation.
+This rebuild keeps `yadem` focused on the dispatcher, target scripts, config,
+tests, completions, and `Brewfile` support. Personal dotfiles live in the
+separate dotfiles repository and are consumed through the `dotfiles` target.

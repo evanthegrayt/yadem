@@ -2,10 +2,12 @@
 
 set -eo pipefail
 
-readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+readonly SCRIPT_DIR
 readonly TARGET_DIR="$SCRIPT_DIR/yadem.d"
 readonly LIB_PATH="$SCRIPT_DIR/lib/yadem.sh"
 
+# shellcheck source=bin/lib/yadem.sh
 . "$LIB_PATH"
 
 usage() {
@@ -38,10 +40,14 @@ run_target() {
     (
         set -eo pipefail
 
+        # shellcheck disable=SC2034
         INSTALL_TARGET="$target"
+        # shellcheck disable=SC2034
         DRY_RUN="$dry_run"
 
+        # shellcheck source=bin/lib/yadem.sh
         . "$LIB_PATH"
+        # shellcheck disable=SC1090
         . "$target_path"
 
         if ! declare -F "$command" >/dev/null 2>&1; then
