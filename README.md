@@ -32,6 +32,7 @@ Once cloned, run individual targets:
 
 ```sh
 bin/yadem dotfiles
+bin/yadem dotfiles-uninstall
 bin/yadem homebrew
 bin/yadem brew
 ```
@@ -83,6 +84,7 @@ Current targets:
 - `bash`: clone bash-it and optional custom files
 - `brew`: install packages from `Brewfile`
 - `dotfiles`: symlink dotfiles into `$HOME`
+- `dotfiles-uninstall`: remove managed dotfile symlinks from `$HOME`
 - `gems`: install configured Ruby gems
 - `homebrew`: install Homebrew if missing
 - `italics`: compile `xterm-256color.terminfo`
@@ -146,6 +148,23 @@ Existing directories are skipped.
 If `YADEM_LOCALIZE_EXISTING=true`, supported existing files are backed up and
 linked back as `~/.<name>.local`, preserving the old `yadem` local override
 workflow.
+
+To remove managed dotfile symlinks, run:
+
+```sh
+bin/yadem dotfiles-uninstall
+```
+
+Only symlinks pointing into `YADEM_DOTFILES_DIR` are removed. Pass a single file
+as `name` or `.name` to remove one link:
+
+```sh
+bin/yadem dotfiles-uninstall zshrc
+bin/yadem dotfiles-uninstall .zshrc
+```
+
+Add `--restore` or `-R` to move the newest matching backup from
+`INSTALL_CACHE_DIR` back into `$HOME` after the symlink is removed.
 
 ## Completions
 
