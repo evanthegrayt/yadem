@@ -18,7 +18,7 @@ setup_install_home() {
 }
 
 run_yadem() {
-    HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$(yadem_bin)" "$@"
+    HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" YADEM_LOG="${YADEM_LOG:-}" run "$(yadem_bin)" "$@"
 }
 
 setup_test_dotfiles_repo() {
