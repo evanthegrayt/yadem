@@ -42,7 +42,7 @@ write_yadem_config() {
     assert_output_contains "-a, --all"
     assert_output_contains "-l, --list"
     assert_output_contains "Run one target per invocation"
-    assert_output_contains "dotfiles [FILE]"
+    assert_output_contains "dotfiles [OPTIONS] [FILE]"
     assert_output_contains "dotfiles-uninstall [OPTIONS] [FILE]"
 }
 
@@ -266,6 +266,41 @@ SH
     assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles linked"
 }
 
+@test "dotfiles install skips ignored files by default" {
+    setup_test_dotfiles_repo
+
+    run_yadem dotfiles
+
+    assert_success
+    assert_output_contains "Skipped ignored dotfile: README.md"
+    [[ ! -e "$TEST_HOME/.README.md" ]]
+    assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles skipped-ignored"
+}
+
+@test "dotfiles all-file install can include ignored files explicitly" {
+    setup_test_dotfiles_repo
+
+    run_yadem dotfiles --include-ignored
+
+    assert_success
+    [[ -L "$TEST_HOME/.README.md" ]]
+    [[ "$(readlink "$TEST_HOME/.README.md")" == "$TEST_DOTFILES_DIR/README.md" ]]
+    assert_output_contains "Linked $TEST_HOME/.README.md -> $TEST_DOTFILES_DIR/README.md"
+    assert_output_not_contains "Skipped ignored dotfile: README.md"
+}
+
+@test "--all dotfiles install skips ignored files by default" {
+    setup_test_dotfiles_repo
+    write_yadem_config "YADEM_ALL_TARGETS=(dotfiles)"
+
+    run_yadem --all
+
+    assert_success
+    assert_output_contains "Running target: dotfiles"
+    assert_output_contains "Skipped ignored dotfile: README.md"
+    [[ ! -e "$TEST_HOME/.README.md" ]]
+}
+
 @test "dotfiles single-file install accepts name without touching unrelated dotfiles" {
     setup_test_dotfiles_repo
 
@@ -288,6 +323,30 @@ SH
     [[ -L "$TEST_HOME/.zshrc" ]]
     [[ "$(readlink "$TEST_HOME/.zshrc")" == "$TEST_DOTFILES_DIR/zshrc" ]]
     [[ ! -e "$TEST_HOME/.bashrc" ]]
+}
+
+@test "dotfiles single-file install can include an ignored file explicitly" {
+    setup_test_dotfiles_repo
+
+    run_yadem dotfiles --include-ignored README.md
+
+    assert_success
+    [[ -L "$TEST_HOME/.README.md" ]]
+    [[ "$(readlink "$TEST_HOME/.README.md")" == "$TEST_DOTFILES_DIR/README.md" ]]
+    [[ ! -e "$TEST_HOME/.zshrc" ]]
+    assert_output_contains "Linked $TEST_HOME/.README.md -> $TEST_DOTFILES_DIR/README.md"
+    assert_output_not_contains "Skipped ignored dotfile: README.md"
+}
+
+@test "dotfiles single-file dry-run can include an ignored file explicitly" {
+    setup_test_dotfiles_repo
+
+    run_yadem --test dotfiles --include-ignored README.md
+
+    assert_success
+    assert_output_contains "Would link $TEST_HOME/.README.md -> $TEST_DOTFILES_DIR/README.md"
+    assert_output_not_contains "Skipped ignored dotfile: README.md"
+    [[ ! -e "$TEST_HOME/.README.md" ]]
 }
 
 @test "dotfiles single-file dry-run reports action without modifying home" {

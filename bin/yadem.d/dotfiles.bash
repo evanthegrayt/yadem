@@ -1,5 +1,13 @@
 accepted_arguments() {
-    printf "%s\n" "[FILE]"
+    printf "%s\n" "[OPTIONS] [FILE]"
+}
+
+dotfile_is_ignored() {
+    local filename="$1"
+    local include_ignored="$2"
+
+    [[ "$include_ignored" != true ]] &&
+        array_contains "$filename" "${YADEM_DOTFILES_IGNORE[@]}"
 }
 
 link_dotfile() {
@@ -71,6 +79,7 @@ link_dotfile() {
 
 install_dotfile() {
     local filename="$1"
+    local include_ignored="$2"
     local file="$YADEM_DOTFILES_DIR/$filename"
 
     if [[ ! -e "$file" && ! -L "$file" ]]; then
@@ -78,7 +87,7 @@ install_dotfile() {
         return 1
     fi
 
-    if array_contains "$filename" "${YADEM_DOTFILES_IGNORE[@]}"; then
+    if dotfile_is_ignored "$filename" "$include_ignored"; then
         say_and_log skipped-ignored "Skipped ignored dotfile: $filename"
         return
     fi
@@ -87,6 +96,7 @@ install_dotfile() {
 }
 
 install_all_dotfiles() {
+    local include_ignored="$1"
     local file
     local filename
 
@@ -95,7 +105,7 @@ install_all_dotfiles() {
 
         filename="${file##*/}"
 
-        if array_contains "$filename" "${YADEM_DOTFILES_IGNORE[@]}"; then
+        if dotfile_is_ignored "$filename" "$include_ignored"; then
             say_and_log skipped-ignored "Skipped ignored dotfile: $filename"
             continue
         fi
@@ -106,6 +116,7 @@ install_all_dotfiles() {
 
 install() {
     local single_file=""
+    local include_ignored=false
     local filename
     local source_status
 
@@ -116,6 +127,9 @@ install() {
             -h|--help)
                 print_help
                 return
+                ;;
+            --include-ignored)
+                include_ignored=true
                 ;;
             -*)
                 say_and_log invalid-option "Invalid option for dotfiles: $1"
@@ -149,9 +163,9 @@ install() {
             say_and_log invalid-dotfile "Invalid dotfile name: $single_file"
             return 1
         fi
-        install_dotfile "$filename" || return
+        install_dotfile "$filename" "$include_ignored" || return
     else
-        install_all_dotfiles
+        install_all_dotfiles "$include_ignored"
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
@@ -174,6 +188,9 @@ Symlink files from YADEM_DOTFILES_DIR into \$HOME.
 
 With no FILE, every non-ignored file is linked. FILE may be passed as name or
 .name, for example zshrc or .zshrc.
+
+Options:
+  --include-ignored  Link files listed in YADEM_DOTFILES_IGNORE.
 
 If YADEM_DOTFILES_DIR is missing, clone YADEM_DOTFILES_REPO into
 YADEM_DOTFILES_REPO_DIR first.
