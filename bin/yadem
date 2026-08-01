@@ -26,17 +26,51 @@ $(list_targets | sed 's/^/  /')
 USAGE
 }
 
+target_path_for() {
+    local target="$1"
+
+    printf "%s\n" "$TARGET_DIR/$target.bash"
+}
+
+target_exists() {
+    local target="$1"
+    local target_path
+
+    target_path="$(target_path_for "$target")"
+    [[ "$target" != */* && "$target" != .* && -f "$target_path" ]]
+}
+
+target_allows_args() {
+    local target="$1"
+    local target_path
+
+    target_exists "$target" || return 1
+    target_path="$(target_path_for "$target")"
+
+    (
+        # shellcheck source=bin/lib/yadem.sh
+        . "$LIB_PATH"
+        # shellcheck disable=SC1090
+        . "$target_path"
+
+        declare -F target_accepts_args >/dev/null 2>&1 || exit 1
+        target_accepts_args
+    )
+}
+
 run_target() {
     local target="$1"
     local command="$2"
-    local target_path="$TARGET_DIR/$target"
+    local target_path
     shift 2
 
-    if [[ "$target" == */* || "$target" == .* || ! -f "$target_path" ]]; then
+    if ! target_exists "$target"; then
         echo "Unknown install target: $target" >&2
         echo "Run ${0##*/} --list to see available targets." >&2
         return 1
     fi
+
+    target_path="$(target_path_for "$target")"
 
     (
         set -eo pipefail
@@ -58,17 +92,6 @@ run_target() {
 
         "$command" "$@"
     )
-}
-
-target_accepts_args() {
-    case "$1" in
-        dotfiles-uninstall)
-            return 0
-            ;;
-        *)
-            return 1
-            ;;
-    esac
 }
 
 dry_run=false
@@ -99,7 +122,7 @@ while (($#)); do
             ;;
         --)
             shift
-            if ((${#targets[@]} == 1)) && target_accepts_args "${targets[0]}"; then
+            if ((${#targets[@]} == 1)) && target_allows_args "${targets[0]}"; then
                 while (($#)); do
                     target_args+=("$1")
                     shift
@@ -114,7 +137,7 @@ while (($#)); do
             break
             ;;
         -*)
-            if ((${#targets[@]} == 1)) && target_accepts_args "${targets[0]}"; then
+            if ((${#targets[@]} == 1)) && target_allows_args "${targets[0]}"; then
                 target_args+=("$1")
                 shift
                 continue
@@ -127,7 +150,7 @@ while (($#)); do
         *)
             if ((${#target_args[@]})); then
                 target_args+=("$1")
-            elif ((${#targets[@]} == 1)) && target_accepts_args "${targets[0]}"; then
+            elif ((${#targets[@]} == 1)) && target_allows_args "${targets[0]}"; then
                 target_args+=("$1")
             else
                 targets+=("$1")

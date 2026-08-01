@@ -8,7 +8,7 @@ Yet Another Dotfile and Environment Manager.
 
 `yadem` is a small target dispatcher for setting up a personal development
 environment. The command stays thin; each setup concern lives in its own target
-script under `bin/yadem.d/`.
+module under `bin/yadem.d/`.
 
 The project is split into two repositories:
 
@@ -32,6 +32,7 @@ Once cloned, run individual targets:
 
 ```sh
 bin/yadem dotfiles
+bin/yadem dotfiles zshrc
 bin/yadem dotfiles-uninstall
 bin/yadem homebrew
 bin/yadem brew
@@ -58,11 +59,16 @@ bin/yadem dotfiles --help
 
 ## Target Contract
 
-Each executable file in `bin/yadem.d/` is a target. A target must implement:
+Each `*.bash` file in `bin/yadem.d/` is a target module. Targets are referenced
+without the `.bash` extension, sourced by the dispatcher, and must implement:
 
 - `install`: perform the work
 - `dry_run`: print what would happen without doing it
 - `print_help`: print target-specific usage
+
+Targets may implement `target_accepts_args` when they own trailing arguments.
+If that function is missing, the dispatcher assumes the target does not accept
+arguments.
 
 The dispatcher sets these variables for every target:
 
@@ -141,6 +147,13 @@ Install clones `YADEM_DOTFILES_REPO` into `YADEM_DOTFILES_REPO_DIR`, then links
 files from `YADEM_DOTFILES_DIR` into `$HOME` with a leading dot added. For
 example, `zshrc` becomes `~/.zshrc`.
 
+Pass a single file as `name` or `.name` to install only that dotfile:
+
+```sh
+bin/yadem dotfiles zshrc
+bin/yadem dotfiles .zshrc
+```
+
 Existing symlinks are replaced. Existing regular files are moved to
 `$INSTALL_CACHE_DIR/<name>.<YYYY-MM-DD>` before the new symlink is created.
 Existing directories are skipped.
@@ -179,7 +192,7 @@ The installer has a Bats test suite. Install `bats-core`, then run:
 
 ```sh
 bats test
-shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/* completions/yadem.bash config/yademrc test/*.bash test/*.bats
+shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash config/yademrc test/*.bash test/*.bats
 ```
 
 ## Development Status

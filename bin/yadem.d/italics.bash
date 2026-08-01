@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 install() {
     local terminfo
     local source_status=0

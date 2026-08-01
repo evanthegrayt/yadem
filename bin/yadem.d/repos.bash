@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 repo_name_for() {
     local repo="$1"
 

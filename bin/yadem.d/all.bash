@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 install() {
     local target
     local args=()

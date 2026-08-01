@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 clone_or_report() {
     local name="$1"
     local repo="$2"

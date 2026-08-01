@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 install() {
     load_yadem_config
 

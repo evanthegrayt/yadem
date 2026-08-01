@@ -55,10 +55,12 @@ write_yadem_config() {
 @test "built-in targets implement print_help without defining help" {
     local target
 
-    for target in "$(repo_root)"/bin/yadem.d/*; do
+    for target in "$(repo_root)"/bin/yadem.d/*.bash; do
         [[ -f "$target" ]] || continue
         grep -E '^print_help\(\) \{' "$target" >/dev/null
         ! grep -E '^help\(\) \{' "$target" >/dev/null
+        [[ ! -x "$target" ]]
+        [[ "$(head -n 1 "$target")" != "#!"* ]]
     done
 }
 
@@ -68,9 +70,7 @@ write_yadem_config() {
     mkdir -p "$fixture/bin/lib" "$fixture/bin/yadem.d"
     cp "$(repo_root)/bin/yadem" "$fixture/bin/yadem"
     cp "$(repo_root)/bin/lib/yadem.sh" "$fixture/bin/lib/yadem.sh"
-    cat > "$fixture/bin/yadem.d/legacy-help" <<'SH'
-#!/usr/bin/env bash
-
+    cat > "$fixture/bin/yadem.d/legacy-help.bash" <<'SH'
 install() {
     say "install should not run"
 }
@@ -83,7 +83,7 @@ help() {
     say "legacy help should not run"
 }
 SH
-    chmod +x "$fixture/bin/yadem" "$fixture/bin/yadem.d/legacy-help"
+    chmod +x "$fixture/bin/yadem"
 
     HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$fixture/bin/yadem" legacy-help --help
 
@@ -92,6 +92,72 @@ SH
     assert_output_not_contains "legacy help should not run"
     assert_output_not_contains "install should not run"
     assert_output_not_contains "dry_run should not run"
+}
+
+@test "target args are opt-in through target_accepts_args" {
+    local fixture="$BATS_TEST_TMPDIR/args-fixture.$BATS_TEST_NUMBER"
+
+    mkdir -p "$fixture/bin/lib" "$fixture/bin/yadem.d"
+    cp "$(repo_root)/bin/yadem" "$fixture/bin/yadem"
+    cp "$(repo_root)/bin/lib/yadem.sh" "$fixture/bin/lib/yadem.sh"
+    cat > "$fixture/bin/yadem.d/echo-args.bash" <<'SH'
+target_accepts_args() {
+    return 0
+}
+
+install() {
+    printf "args:"
+    printf " <%s>" "$@"
+    printf "\n"
+}
+
+dry_run() {
+    install "$@"
+}
+
+print_help() {
+    say "echo-args help"
+}
+SH
+    cat > "$fixture/bin/yadem.d/no-args.bash" <<'SH'
+install() {
+    say "no-args count: $#"
+}
+
+dry_run() {
+    install
+}
+
+print_help() {
+    say "no-args help"
+}
+SH
+    printf "%s\n" "extensionless target should be ignored" > "$fixture/bin/yadem.d/extensionless"
+    chmod +x "$fixture/bin/yadem"
+
+    HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$fixture/bin/yadem" echo-args --flag value
+
+    assert_success
+    assert_output_contains "args: <--flag> <value>"
+
+    HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$fixture/bin/yadem" no-args value
+
+    assert_failure
+    assert_output_contains "Unknown install target: value"
+    assert_output_contains "no-args count: 0"
+
+    HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$fixture/bin/yadem" --list
+
+    assert_success
+    assert_output_contains "echo-args"
+    assert_output_contains "no-args"
+    assert_output_not_contains "echo-args.bash"
+    assert_output_not_contains "extensionless"
+
+    HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$fixture/bin/yadem" extensionless
+
+    assert_failure
+    assert_output_contains "Unknown install target: extensionless"
 }
 
 @test "dotfiles-uninstall help describes single-file and restore modes" {
@@ -192,6 +258,55 @@ SH
     assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles linked"
 }
 
+@test "dotfiles single-file install accepts name without touching unrelated dotfiles" {
+    setup_test_dotfiles_repo
+
+    run_yadem dotfiles zshrc
+
+    assert_success
+    [[ -L "$TEST_HOME/.zshrc" ]]
+    [[ "$(readlink "$TEST_HOME/.zshrc")" == "$TEST_DOTFILES_DIR/zshrc" ]]
+    [[ ! -e "$TEST_HOME/.bashrc" ]]
+    assert_output_contains "Linked $TEST_HOME/.zshrc -> $TEST_DOTFILES_DIR/zshrc"
+    assert_output_not_contains "$TEST_HOME/.bashrc"
+}
+
+@test "dotfiles single-file install accepts leading dot" {
+    setup_test_dotfiles_repo
+
+    run_yadem dotfiles .zshrc
+
+    assert_success
+    [[ -L "$TEST_HOME/.zshrc" ]]
+    [[ "$(readlink "$TEST_HOME/.zshrc")" == "$TEST_DOTFILES_DIR/zshrc" ]]
+    [[ ! -e "$TEST_HOME/.bashrc" ]]
+}
+
+@test "dotfiles single-file dry-run reports action without modifying home" {
+    setup_test_dotfiles_repo
+
+    run_yadem --test dotfiles zshrc
+
+    assert_success
+    assert_output_contains "Would link $TEST_HOME/.zshrc -> $TEST_DOTFILES_DIR/zshrc"
+    assert_output_contains "Dry run complete. Log written to $TEST_CACHE/yadem/install.log"
+    assert_output_not_contains "$TEST_HOME/.bashrc"
+    [[ ! -e "$TEST_HOME/.zshrc" ]]
+    [[ ! -e "$TEST_HOME/.bashrc" ]]
+}
+
+@test "dotfiles single-file install fails clearly when source is missing" {
+    setup_test_dotfiles_repo
+
+    run_yadem dotfiles vimrc
+
+    assert_failure
+    assert_output_contains "Dotfile source not found: $TEST_DOTFILES_DIR/vimrc"
+    [[ ! -e "$TEST_HOME/.vimrc" ]]
+    [[ ! -e "$TEST_HOME/.zshrc" ]]
+    [[ ! -e "$TEST_HOME/.bashrc" ]]
+}
+
 @test "dotfiles install clones missing external repo before linking" {
     local fake_bin="$BATS_TEST_TMPDIR/fake-bin.$BATS_TEST_NUMBER"
 
@@ -245,6 +360,38 @@ SH
     [[ -f "$TEST_CACHE/yadem/zshrc.$(date +%F)" ]]
     [[ "$(cat "$TEST_CACHE/yadem/zshrc.$(date +%F)")" == "local zshrc" ]]
     assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles backed-up"
+}
+
+@test "dotfiles single-file install backs up existing regular file" {
+    setup_test_dotfiles_repo
+    printf "local zshrc\n" > "$TEST_HOME/.zshrc"
+
+    run_yadem dotfiles zshrc
+
+    assert_success
+    [[ -L "$TEST_HOME/.zshrc" ]]
+    [[ "$(readlink "$TEST_HOME/.zshrc")" == "$TEST_DOTFILES_DIR/zshrc" ]]
+    [[ -f "$TEST_CACHE/yadem/zshrc.$(date +%F)" ]]
+    [[ "$(cat "$TEST_CACHE/yadem/zshrc.$(date +%F)")" == "local zshrc" ]]
+    [[ ! -e "$TEST_HOME/.bashrc" ]]
+    assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles backed-up"
+}
+
+@test "dotfiles single-file install can preserve supported existing files as local files" {
+    setup_test_dotfiles_repo
+    write_yadem_config \
+        "YADEM_LOCALIZE_EXISTING=true" \
+        "YADEM_LOCAL_FILES=(zshrc)"
+    printf "local zshrc\n" > "$TEST_HOME/.zshrc"
+
+    run_yadem dotfiles zshrc
+
+    assert_success
+    [[ -L "$TEST_HOME/.zshrc" ]]
+    [[ -L "$TEST_HOME/.zshrc.local" ]]
+    [[ "$(cat "$TEST_HOME/.zshrc.local")" == "local zshrc" ]]
+    [[ ! -e "$TEST_HOME/.bashrc" ]]
+    assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles linked-local"
 }
 
 @test "dotfiles install increments backup names when today's backup exists" {
