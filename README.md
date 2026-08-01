@@ -6,8 +6,7 @@ Yet Another Dotfile and Environment Manager.
 environment. The command stays thin; each setup concern lives in its own target
 script under `bin/yadem.d/`.
 
-This branch still contains dotfiles while the installer is being rebuilt. The
-intended end state is:
+The project is split into two repositories:
 
 - `yadem`: installer framework, targets, config, tests, docs
 - `dotfiles`: personal dotfiles consumed by the `dotfiles` target
@@ -70,7 +69,7 @@ The dispatcher sets these variables for every target:
 - `INSTALL_TARGET`: current target name
 - `DRY_RUN`: `true` or `false`
 
-Shared helpers live in `bin/lib/install.sh`.
+Shared helpers live in `bin/lib/yadem.sh`.
 
 ## Targets
 
@@ -100,6 +99,8 @@ Notable settings:
 
 - `YADEM_ALL_TARGETS`: ordered targets for `bin/yadem --all`
 - `YADEM_DOTFILES_DIR`: source directory for the `dotfiles` target
+- `YADEM_DOTFILES_REPO`: git repository cloned when dotfiles are missing
+- `YADEM_DOTFILES_REPO_DIR`: local clone destination for `YADEM_DOTFILES_REPO`
 - `YADEM_DOTFILES_IGNORE`: dotfile source names to skip
 - `YADEM_LOCALIZE_EXISTING`: link supported backups back as `~/.name.local`
 - `YADEM_LOCAL_FILES`: dotfiles eligible for `.local` preservation
@@ -119,8 +120,20 @@ Set `YADEM_LOG` to override the log path.
 
 ## Dotfiles
 
-The `dotfiles` target links files from `YADEM_DOTFILES_DIR` into `$HOME` with a
-leading dot added. For example, `zshrc` becomes `~/.zshrc`.
+The `dotfiles` target treats dotfiles as an external repository dependency. By
+default it expects:
+
+```sh
+YADEM_REPO_DIR="$HOME/workflow"
+YADEM_DOTFILES_REPO="https://github.com/evanthegrayt/dotfiles"
+YADEM_DOTFILES_REPO_DIR="$YADEM_REPO_DIR/dotfiles"
+YADEM_DOTFILES_DIR="$YADEM_DOTFILES_REPO_DIR/dotfiles"
+```
+
+If `YADEM_DOTFILES_DIR` is missing, dry-run reports the clone that would happen.
+Install clones `YADEM_DOTFILES_REPO` into `YADEM_DOTFILES_REPO_DIR`, then links
+files from `YADEM_DOTFILES_DIR` into `$HOME` with a leading dot added. For
+example, `zshrc` becomes `~/.zshrc`.
 
 Existing symlinks are replaced. Existing regular files are moved to
 `$INSTALL_CACHE_DIR/<name>.<YYYY-MM-DD>` before the new symlink is created.

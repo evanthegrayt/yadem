@@ -9,11 +9,23 @@ yadem_bin() {
 setup_install_home() {
     TEST_HOME="$(mktemp -d "${BATS_TEST_TMPDIR}/home.XXXXXX")"
     TEST_CACHE="$(mktemp -d "${BATS_TEST_TMPDIR}/cache.XXXXXX")"
+    TEST_DOTFILES_REPO="$TEST_HOME/workflow/dotfiles"
+    TEST_DOTFILES_DIR="$TEST_DOTFILES_REPO/dotfiles"
     export TEST_HOME TEST_CACHE
+    export TEST_DOTFILES_REPO TEST_DOTFILES_DIR
 }
 
 run_yadem() {
     HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$(yadem_bin)" "$@"
+}
+
+setup_test_dotfiles_repo() {
+    mkdir -p "$TEST_DOTFILES_DIR"
+    mkdir -p "$TEST_DOTFILES_DIR/config"
+    mkdir -p "$TEST_DOTFILES_REPO/.git"
+    printf "external zshrc\n" > "$TEST_DOTFILES_DIR/zshrc"
+    printf "external bashrc\n" > "$TEST_DOTFILES_DIR/bashrc"
+    printf "ignored readme\n" > "$TEST_DOTFILES_DIR/README.md"
 }
 
 assert_success() {

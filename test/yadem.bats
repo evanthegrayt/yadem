@@ -78,6 +78,7 @@ write_yadem_config() {
 }
 
 @test "dotfiles dry-run reports actions without modifying home" {
+    setup_test_dotfiles_repo
     printf "local zshrc\n" > "$TEST_HOME/.zshrc"
     ln -s /tmp/old-dotfile-target "$TEST_HOME/.bashrc"
     mkdir -p "$TEST_HOME/.config"
@@ -98,43 +99,86 @@ write_yadem_config() {
     [[ -d "$TEST_HOME/.config" ]]
 }
 
+@test "dotfiles dry-run reports clone when external repo is missing" {
+    run_yadem --test dotfiles
+
+    assert_success
+    assert_output_contains "Would clone https://github.com/evanthegrayt/dotfiles.git to $TEST_DOTFILES_REPO"
+    assert_output_contains "Dry run complete. Log written to $TEST_CACHE/yadem/install.log"
+    assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles would-clone"
+    [[ ! -e "$TEST_DOTFILES_REPO" ]]
+}
+
 @test "dotfiles install links missing files" {
+    setup_test_dotfiles_repo
+
     run_yadem dotfiles
 
     assert_success
     [[ -L "$TEST_HOME/.zshrc" ]]
-    [[ "$(readlink "$TEST_HOME/.zshrc")" == "$(repo_root)/dotfiles/zshrc" ]]
+    [[ "$(readlink "$TEST_HOME/.zshrc")" == "$TEST_DOTFILES_DIR/zshrc" ]]
     assert_output_contains "Done. Log written to $TEST_CACHE/yadem/install.log"
     assert_output_not_contains "Linked:"
     assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles linked"
 }
 
+@test "dotfiles install clones missing external repo before linking" {
+    local fake_bin="$BATS_TEST_TMPDIR/fake-bin.$BATS_TEST_NUMBER"
+
+    mkdir -p "$fake_bin"
+    cat > "$fake_bin/git" <<'SH'
+#!/usr/bin/env bash
+set -e
+
+if [[ "$1" != clone ]]; then
+    exit 1
+fi
+
+mkdir -p "$3/.git"
+mkdir -p "$3/dotfiles"
+printf "cloned zshrc\n" > "$3/dotfiles/zshrc"
+SH
+    chmod +x "$fake_bin/git"
+
+    PATH="$fake_bin:$PATH" run_yadem dotfiles
+
+    assert_success
+    assert_output_contains "Cloning https://github.com/evanthegrayt/dotfiles.git to $TEST_DOTFILES_REPO"
+    [[ -L "$TEST_HOME/.zshrc" ]]
+    [[ "$(readlink "$TEST_HOME/.zshrc")" == "$TEST_DOTFILES_DIR/zshrc" ]]
+    assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles cloning"
+    assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles linked"
+}
+
 @test "dotfiles install replaces existing symlinks" {
+    setup_test_dotfiles_repo
     ln -s /tmp/old-dotfile-target "$TEST_HOME/.zshrc"
 
     run_yadem dotfiles
 
     assert_success
     [[ -L "$TEST_HOME/.zshrc" ]]
-    [[ "$(readlink "$TEST_HOME/.zshrc")" == "$(repo_root)/dotfiles/zshrc" ]]
+    [[ "$(readlink "$TEST_HOME/.zshrc")" == "$TEST_DOTFILES_DIR/zshrc" ]]
     assert_output_contains "Replaced symlink: $TEST_HOME/.zshrc"
     assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles replaced-link"
 }
 
 @test "dotfiles install backs up existing regular files" {
+    setup_test_dotfiles_repo
     printf "local zshrc\n" > "$TEST_HOME/.zshrc"
 
     run_yadem dotfiles
 
     assert_success
     [[ -L "$TEST_HOME/.zshrc" ]]
-    [[ "$(readlink "$TEST_HOME/.zshrc")" == "$(repo_root)/dotfiles/zshrc" ]]
+    [[ "$(readlink "$TEST_HOME/.zshrc")" == "$TEST_DOTFILES_DIR/zshrc" ]]
     [[ -f "$TEST_CACHE/yadem/zshrc.$(date +%F)" ]]
     [[ "$(cat "$TEST_CACHE/yadem/zshrc.$(date +%F)")" == "local zshrc" ]]
     assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles backed-up"
 }
 
 @test "dotfiles install increments backup names when today's backup exists" {
+    setup_test_dotfiles_repo
     mkdir -p "$TEST_CACHE/yadem"
     printf "previous backup\n" > "$TEST_CACHE/yadem/zshrc.$(date +%F)"
     printf "local zshrc\n" > "$TEST_HOME/.zshrc"
@@ -147,6 +191,7 @@ write_yadem_config() {
 }
 
 @test "dotfiles install can preserve supported existing files as local files" {
+    setup_test_dotfiles_repo
     write_yadem_config \
         "YADEM_LOCALIZE_EXISTING=true" \
         "YADEM_LOCAL_FILES=(zshrc)"
@@ -162,6 +207,7 @@ write_yadem_config() {
 }
 
 @test "dotfiles install skips existing directories" {
+    setup_test_dotfiles_repo
     mkdir -p "$TEST_HOME/.config"
 
     run_yadem dotfiles
@@ -174,6 +220,7 @@ write_yadem_config() {
 }
 
 @test "dotfiles install continues when log cannot be written" {
+    setup_test_dotfiles_repo
     printf "not a directory\n" > "$TEST_HOME/not-directory"
     export YADEM_LOG="$TEST_HOME/not-directory/install.log"
 

@@ -11,8 +11,10 @@ INSTALL_TARGET="${INSTALL_TARGET:-yadem}"
 INSTALL_LOG_WRITTEN=false
 INSTALL_LOG_FAILED=false
 
-YADEM_DOTFILES_DIR="${YADEM_DOTFILES_DIR:-$INSTALL_PATH/dotfiles}"
 YADEM_REPO_DIR="${YADEM_REPO_DIR:-$HOME/workflow}"
+YADEM_DOTFILES_REPO="${YADEM_DOTFILES_REPO:-https://github.com/evanthegrayt/dotfiles}"
+YADEM_DOTFILES_REPO_DIR="${YADEM_DOTFILES_REPO_DIR:-$YADEM_REPO_DIR/dotfiles}"
+YADEM_DOTFILES_DIR="${YADEM_DOTFILES_DIR:-$YADEM_DOTFILES_REPO_DIR/dotfiles}"
 YADEM_VIM_REPO="${YADEM_VIM_REPO:-https://github.com/evanthegrayt/vimfiles.git}"
 YADEM_ZSH_REPO="${YADEM_ZSH_REPO:-https://github.com/ohmyzsh/ohmyzsh.git}"
 YADEM_ZSH_CUSTOM_REPO="${YADEM_ZSH_CUSTOM_REPO:-https://github.com/evanthegrayt/oh-my-zsh-custom.git}"
@@ -69,6 +71,16 @@ require_command() {
 
     say_and_log missing-command "$command_name is required"
     return 1
+}
+
+git_clone_url_for() {
+    local repo="$1"
+
+    if [[ "$repo" != *.git ]]; then
+        repo="$repo.git"
+    fi
+
+    printf "%s\n" "$repo"
 }
 
 brew_executable() {

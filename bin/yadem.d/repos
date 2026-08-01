@@ -46,11 +46,7 @@ install() {
     for repo in "${YADEM_REPOS[@]}"; do
         repo_name="$(repo_name_for "$repo")"
         repo_path="$YADEM_REPO_DIR/$repo_name"
-        clone_url="$repo"
-
-        if [[ "$clone_url" != *.git ]]; then
-            clone_url="$clone_url.git"
-        fi
+        clone_url="$(git_clone_url_for "$repo")"
 
         if [[ -d "$repo_path/.git" ]]; then
             say_and_log present "Repository already cloned: $repo_path"
