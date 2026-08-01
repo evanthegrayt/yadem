@@ -1,107 +1,41 @@
-# You can copy this file as `~/.yademrc`, and change the values.
-# That file will override this one.
+# shellcheck shell=bash disable=SC2034
+# Default yadem configuration. Copy to ~/.yademrc and adjust locally.
 
-# DOTFILE_DIR: Directory where actual dotfiles are.
-DOTFILE_DIR="$HOME/workflow/dotfiles/dotfiles"
+YADEM_REPO_DIR="${YADEM_REPO_DIR:-$HOME/workflow}"
+YADEM_DOTFILES_REPO="${YADEM_DOTFILES_REPO:-https://github.com/evanthegrayt/dotfiles}"
+# YADEM_DOTFILES_REPO_DIR defaults to $YADEM_REPO_DIR/dotfiles after config loads.
+# YADEM_DOTFILES_DIR defaults to $YADEM_DOTFILES_REPO_DIR/dotfiles after config loads.
 
-# VIM_REPO: The `vim` repository to install.
-VIM_REPO='https://github.com/evanthegrayt/vimfiles.git'
+YADEM_VIM_REPO="${YADEM_VIM_REPO:-https://github.com/evanthegrayt/vimfiles.git}"
+YADEM_ZSH_REPO="${YADEM_ZSH_REPO:-https://github.com/ohmyzsh/ohmyzsh.git}"
+YADEM_ZSH_CUSTOM_REPO="${YADEM_ZSH_CUSTOM_REPO:-https://github.com/evanthegrayt/oh-my-zsh-custom.git}"
+YADEM_BASH_REPO="${YADEM_BASH_REPO:-https://github.com/Bash-it/bash-it.git}"
+YADEM_BASH_CUSTOM_REPO="${YADEM_BASH_CUSTOM_REPO:-https://github.com/evanthegrayt/bash-it-custom.git}"
 
-# ZSH_CUSTOM_REPO: The `custom` directory repository for `oh-my-zsh`.
-ZSH_CUSTOM_REPO='https://github.com/evanthegrayt/oh-my-zsh-custom.git'
+YADEM_SCREENSHOT_DIR="${YADEM_SCREENSHOT_DIR:-$HOME/Pictures/Screenshots}"
+YADEM_LOGIN_SHELL="${YADEM_LOGIN_SHELL:-}"
+YADEM_REPO_AUTO_RUN_BUILD="${YADEM_REPO_AUTO_RUN_BUILD:-false}"
+YADEM_LOCALIZE_EXISTING="${YADEM_LOCALIZE_EXISTING:-false}"
 
-# BASH_CUSTOM_REPO: The `custom` directory repository for `bash_it`.
-BASH_CUSTOM_REPO='https://github.com/evanthegrayt/bash-it-custom.git'
-
-# REPO_DIR: Directory to clone git repos into.
-REPO_DIR="$HOME/workflow"
-
-# SCREENSHOT_DIR: On mac, where you'd like screenshots to be placed.
-SCREENSHOT_DIR="$HOME/Pictures/Screenshots"
-
-# LOGFILE_TIMESTAMP: Timestamp used by log() function when adding messages.
-LOGFILE_TIMESTAMP="$( date "+%Y-%m-%d %H:%M:%S" )"
-
-# LOGFILE_DATESTAMP: Datestamp that will be used for log file names.
-LOGFILE_DATESTAMP="$( date "+%Y-%m-%d" )"
-
-# Programs to install using `brew install`.
-BREW_TAPS=(
-php
+YADEM_ALL_TARGETS=(
+homebrew
+brew
+repos
+gems
+vim
 zsh
 bash
-vim
-git
-git-lfs
-the_silver_searcher
-readline
-gnupg
-tree
-'--HEAD universal-ctags/universal-ctags/universal-ctags'
-evince
-most
-diff-so-fancy
-python
-ipython
-source-highlight
-mycli
-colordiff
+italics
+dotfiles
 )
 
-# Programs to install using `brew cask install`.
-BREW_CASKS=(
-java
-slack
-virtualbox
-vagrant
-iterm2
-firefox
-alfred
-mattermost
-macvim
-dbeaver-community
+YADEM_GEMS=(
+standard
+spoonerize
+standup_md
 )
 
-# Ruby gems to install.
-RUBY_GEMS=(
-rails
-bundler
-rake
-rspec
-ripper-tags
-rubocop
-rdoc
-rubylexer
-vim
-pry
-pry-theme
-pry-coolline
-pry-editline
-)
-
-# Files that support sourcing a `[FILE].local`.
-LOCAL_FILES=(
-inputrc
-bashrc
-shellrc
-zshrc
-profile
-aliases
-irbrc
-pryrc
-cshrc
-bash_profile
-)
-
-# Files to not install as a dotfile.
-IGNORE=(
-README.md
-LICENSE
-xterm-256color.terminfo
-)
-
-# Git repos to clone.
-GIT_REPOS=(
+YADEM_REPOS=(
 https://github.com/evanthegrayt/dotfiles
 https://github.com/evanthegrayt/list-and-grep
 https://github.com/evanthegrayt/list-and-count
@@ -114,5 +48,23 @@ https://github.com/evanthegrayt/bash-lib
 https://github.com/evanthegrayt/grayt-FSyH-theme
 )
 
-# vi: set ft=sh :
+YADEM_LOCAL_FILES=(
+inputrc
+bashrc
+shellrc
+zshrc
+profile
+aliases
+irbrc
+pryrc
+cshrc
+bash_profile
+)
 
+YADEM_DOTFILES_IGNORE=(
+README.md
+LICENSE
+xterm-256color.terminfo
+)
+
+# vi: set ft=sh :

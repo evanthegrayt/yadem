@@ -1,125 +1,166 @@
-# Yet Another Dotfile and Environment Manager
-A command line interface installation script for your custom Mac/Linux
-environment, with a boat-load of features.
+# yadem
 
-## Rationale
-Ideally, you shouldn't need a script this hefty for installing your
-configuration, as most people only need to get their environment set up once
-per-computer they purchase. However, I regularly have to set up my workflow on
-various VMs and Vagrant boxes, and I got tired of constantly having to manually
-set up my dotfiles, `vim`, `rvm`, `zsh`, `virtualbox`, `vagrant`, `git-lfs`, and
-the like. So, I made a script that does it all for me.
+Yet Another Dotfile and Environment Manager.
 
-## Installation
-Clone the repository wherever you want it:
+`yadem` is a small target dispatcher for setting up a personal development
+environment. The command stays thin; each setup concern lives in its own target
+script under `bin/yadem.d/`.
+
+The project is split into two repositories:
+
+- `yadem`: installer framework, targets, config, tests, docs
+- `dotfiles`: personal dotfiles consumed by the `dotfiles` target
+
+## Bootstrap
+
+There is no way around the first few machine-level prerequisites: you need a
+shell, `git`, and usually `curl` before `yadem` can clone itself or install
+Homebrew. Those first steps belong in the README because they have to happen
+before this command exists locally.
+
 ```sh
 git clone https://github.com/evanthegrayt/yadem.git
+cd yadem
+bin/yadem --list
 ```
 
-## Features
-### Config File
-This script reads a [config file](config/yademrc). This file contains all of my
-preferred configurations. If you'd like to change anything, you can copy the
-file to `~/.yademrc`, and change whatever values you'd like.
+Once cloned, run individual targets:
 
-The biggest appeal to this script is the dotfile installation aspect, so
-requiring a dotfile to be located in your home directory for installation can be
-counter-intuitive. For this reason, you can pass the config file with `-r
-/path/to/config_file`. Note that the config file must still be called either
-`yademrc` or `.yademrc`.
-
-Currently, if a custom `yademrc` file is passed, that file will be sourced,
-while `config/yademrc` will not be sourced at all. If people would rather just
-have `~/.yademrc` sourced *after* `config/yademrc`, that would be easy enough to
-implement, so just let me know.
-
-### Dotfile Installation
-Running `bin/install -f` will link the files from `$DOTFILE_DIR` to `$HOME` as
-dotfiles, unless the file is in the `IGNORE` array. These values can be changed
-in the [config file](config/yademrc). Currently, the files must not
-start with a dot; when it links them to the home directory, it will add the dot
-automatically. This is by design, as I didn't want to have a repository of
-hidden files.
-
-By default, the script won't move or overwrite currently-existing
-files. To change the way existing files are handled, see the options under
-"Handling old dotfiles" in the [help documentation](lib/help_menu.txt). There
-are also a lot of other options, including installing a single file, cloning
-shell frameworks, etc.
-
-### "Local" Config Files
-There are settings I have that are specifically for work that I didn't want to
-commit to a public repository, so I have added a feature to deal with this
-issue in my dotfiles themselves: If a file exists in your home directory with
-the same name, but has a `.local` extension, that file will be sourced *after*
-the file from the repository is loaded. This allows for overriding settings from
-the files in the repository.  You can keep these locally, or store them in a
-private repository, which is what I've done. You can edit which files will
-source "local" counterparts in the [config file](config/yademrc).
-
-When running the install script, you can pass `-L`, and if the file already
-exists, it'll be backed up, and then re-linked to `$HOME` as `[FILE].local`. To
-use this feature, you'll need to add a `source` line at the end of your file.
 ```sh
-# zshrc
-# ...normal zshrc stuff would go here!
-[[ -f $HOME/.zshrc.local ]] && source $HOME/.zshrc.local
+bin/yadem dotfiles
+bin/yadem homebrew
+bin/yadem brew
 ```
 
-### Custom Repositories
-You can add repositories to the `GIT_REPOS` array in the `yademrc` file.  These
-will be cloned when the `-c` option is passed. When this option is passed, the
-repository will be cloned, and if there's a `Rakefile` or `Makefile`, it will be
-executed.
+Preview work without changing the system:
 
-### Install Packages with Brew
-There are two arrays in the `yademrc` file which allow you to add programs to be
-installed with `brew install` (`BREW_TAPS`) or `brew cask install`
-(`BREW_CASKS`). If you don't know the difference between the two, I recommend
-researching them.
+```sh
+bin/yadem --test dotfiles
+bin/yadem --test brew gems
+```
 
-### Ruby Gems
-You can add ruby gems to the `RUBY_GEMS` array and install them with `-g`. This
-might be changed to use a `Gemfile` at some point.
+Run the configured setup sequence:
 
-### Logging
-Everything that's done by the install script is logged, whether it's
-installation of programs or linking of files. There will be a log file for every
-day the `bin/install` script is run, and these will be located in the `log/`
-directory, along with time stamps. You can print the log file for today's date
-using `bin/install -p`. To print an older log file, run `bin/install -P [DATE]`.
-To get a list of log files, run `bin/install -l`.
+```sh
+bin/yadem --all
+```
 
-## Un-Installation
-If you want to uninstall just the dotfiles, just run the `install` script with
-the `-u` option; however, this script *does* come with a way to safely remove
-the entire repository without losing the files saved in the `backup` directory.
-Just run the `safely_uninstall_repo` script in the `bin` directory. It will move
-all the files in the `backup` directory to your `$HOME` directory before
-removing the entire repository.
+Show target-specific help:
 
-## FAQ
-#### Why not use submodules?
-I tried keeping repositories in here as submodules (such as `vim`, `oh-my-zsh`,
-etc.), but I didn't like it, as I wanted more control over what gets installed
-from system to system. Having the option to install these other repositories via
-the `install` script seemed like the best compromise.
+```sh
+bin/yadem dotfiles --help
+```
 
-## Disclaimers
-Obviously, the variables set in the [config file](config/yademrc) are set up for
-my workflow, so don't be surprised if some things don't work for you, or if you
-don't like my setup.
+## Target Contract
 
-Also, I've given users a lot of options for saving/backing up their
-old dotfiles, but it IS possible to delete your old files. I recommend keeping
-them in a separate repository, or at least a backup of some kind.
+Each executable file in `bin/yadem.d/` is a target. A target must implement:
 
-## Reporting Bugs
-If issues are found, please [creating an issue in the
-repository](https://github.com/evanthegrayt/yadem/issues/new)
-detailing the problem.
+- `install`: perform the work
+- `dry_run`: print what would happen without doing it
+- `help`: print target-specific usage
 
-## Self-Promotion
-I do these projects for fun, and I enjoy knowing that they're helpful to people.
-Consider starring [the repository](https://github.com/evanthegrayt/yadem) if you
-like it! If you love it, follow me [on github](https://github.com/evanthegrayt)!
+The dispatcher sets these variables for every target:
+
+- `INSTALL_PATH`: repository root
+- `INSTALL_BIN_DIR`: `bin/`
+- `INSTALL_TARGET_DIR`: `bin/yadem.d/`
+- `INSTALL_CACHE_DIR`: cache and backup directory
+- `INSTALL_LOG`: log file path
+- `INSTALL_TARGET`: current target name
+- `DRY_RUN`: `true` or `false`
+
+Shared helpers live in `bin/lib/yadem.sh`.
+
+## Targets
+
+Current targets:
+
+- `all`: run the configured `YADEM_ALL_TARGETS` sequence
+- `bash`: clone bash-it and optional custom files
+- `brew`: install packages from `Brewfile`
+- `dotfiles`: symlink dotfiles into `$HOME`
+- `gems`: install configured Ruby gems
+- `homebrew`: install Homebrew if missing
+- `italics`: compile `xterm-256color.terminfo`
+- `macos`: apply macOS-specific setup
+- `repos`: clone configured git repositories
+- `shell`: change the login shell
+- `vim`: clone vimfiles into `~/.vim`
+- `zsh`: clone oh-my-zsh and optional custom files
+
+`macos` and `shell` are intentionally not in the default `--all` sequence.
+
+## Configuration
+
+Defaults live in `config/yademrc`. Copy it to `~/.yademrc` or set
+`YADEM_CONFIG=/path/to/yademrc` for local overrides.
+
+Notable settings:
+
+- `YADEM_ALL_TARGETS`: ordered targets for `bin/yadem --all`
+- `YADEM_DOTFILES_DIR`: source directory for the `dotfiles` target
+- `YADEM_DOTFILES_REPO`: git repository cloned when dotfiles are missing
+- `YADEM_DOTFILES_REPO_DIR`: local clone destination for `YADEM_DOTFILES_REPO`
+- `YADEM_DOTFILES_IGNORE`: dotfile source names to skip
+- `YADEM_LOCALIZE_EXISTING`: link supported backups back as `~/.name.local`
+- `YADEM_LOCAL_FILES`: dotfiles eligible for `.local` preservation
+- `YADEM_REPO_DIR`: clone destination for `repos`
+- `YADEM_REPOS`: git repositories to clone
+- `YADEM_REPO_AUTO_RUN_BUILD`: opt into running `rake`/`make` after clone
+- `YADEM_GEMS`: Ruby gems to install
+- `YADEM_LOGIN_SHELL`: shell name for the `shell` target
+
+Installer output is written to:
+
+```sh
+${XDG_CACHE_HOME:-$HOME/.cache}/yadem/install.log
+```
+
+Set `YADEM_LOG` to override the log path.
+
+## Dotfiles
+
+The `dotfiles` target treats dotfiles as an external repository dependency. By
+default it expects:
+
+```sh
+YADEM_REPO_DIR="$HOME/workflow"
+YADEM_DOTFILES_REPO="https://github.com/evanthegrayt/dotfiles"
+YADEM_DOTFILES_REPO_DIR="$YADEM_REPO_DIR/dotfiles"
+YADEM_DOTFILES_DIR="$YADEM_DOTFILES_REPO_DIR/dotfiles"
+```
+
+If `YADEM_DOTFILES_DIR` is missing, dry-run reports the clone that would happen.
+Install clones `YADEM_DOTFILES_REPO` into `YADEM_DOTFILES_REPO_DIR`, then links
+files from `YADEM_DOTFILES_DIR` into `$HOME` with a leading dot added. For
+example, `zshrc` becomes `~/.zshrc`.
+
+Existing symlinks are replaced. Existing regular files are moved to
+`$INSTALL_CACHE_DIR/<name>.<YYYY-MM-DD>` before the new symlink is created.
+Existing directories are skipped.
+
+If `YADEM_LOCALIZE_EXISTING=true`, supported existing files are backed up and
+linked back as `~/.<name>.local`, preserving the old `yadem` local override
+workflow.
+
+## Completions
+
+Completion scripts are available in `completions/`:
+
+- `completions/yadem.bash`
+- `completions/yadem.zsh`
+
+## Tests
+
+The installer has a Bats test suite. Install `bats-core`, then run:
+
+```sh
+bats test
+shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/* completions/yadem.bash config/yademrc test/*.bash test/*.bats
+```
+
+## Development Status
+
+This rebuild keeps `yadem` focused on the dispatcher, target scripts, config,
+tests, completions, and `Brewfile` support. Personal dotfiles live in the
+separate dotfiles repository and are consumed through the `dotfiles` target.
