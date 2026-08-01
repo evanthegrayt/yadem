@@ -106,6 +106,7 @@ Current targets:
 - `gems`: install configured Ruby gems
 - `homebrew`: install Homebrew if missing
 - `italics`: compile `xterm-256color.terminfo`
+- `log`: inspect or remove the current installer log
 - `macos`: apply macOS-specific setup
 - `repos`: clone configured git repositories
 - `shell`: change the login shell
@@ -141,6 +142,15 @@ ${XDG_CACHE_HOME:-$HOME/.cache}/yadem/install.log
 ```
 
 Set `YADEM_LOG` to override the log path.
+
+Use the `log` target to inspect the current log:
+
+```sh
+bin/yadem log path
+bin/yadem log list
+bin/yadem log show
+bin/yadem log delete
+```
 
 ## Dotfiles
 
