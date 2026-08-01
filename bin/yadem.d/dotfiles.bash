@@ -1,5 +1,5 @@
-target_accepts_args() {
-    return 0
+accepted_arguments() {
+    printf "%s\n" "[FILE]"
 }
 
 link_dotfile() {

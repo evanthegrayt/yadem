@@ -37,11 +37,13 @@ write_yadem_config() {
     run_yadem --help
 
     assert_success
-    assert_output_contains "USAGE: yadem [OPTIONS] TARGET [TARGET...]"
+    assert_output_contains "USAGE: yadem [OPTIONS] TARGET [ARGS...]"
     assert_output_contains "-t, --test"
     assert_output_contains "-a, --all"
     assert_output_contains "-l, --list"
-    assert_output_contains "dotfiles"
+    assert_output_contains "Run one target per invocation"
+    assert_output_contains "dotfiles [FILE]"
+    assert_output_contains "dotfiles-uninstall [OPTIONS] [FILE]"
 }
 
 @test "target help is delegated to the target script" {
@@ -94,15 +96,15 @@ SH
     assert_output_not_contains "dry_run should not run"
 }
 
-@test "target args are opt-in through target_accepts_args" {
+@test "target args are opt-in through accepted_arguments" {
     local fixture="$BATS_TEST_TMPDIR/args-fixture.$BATS_TEST_NUMBER"
 
     mkdir -p "$fixture/bin/lib" "$fixture/bin/yadem.d"
     cp "$(repo_root)/bin/yadem" "$fixture/bin/yadem"
     cp "$(repo_root)/bin/lib/yadem.sh" "$fixture/bin/lib/yadem.sh"
-    cat > "$fixture/bin/yadem.d/echo-args.bash" <<'SH'
-target_accepts_args() {
-    return 0
+cat > "$fixture/bin/yadem.d/echo-args.bash" <<'SH'
+accepted_arguments() {
+    printf "%s\n" "[ARG...]"
 }
 
 install() {
@@ -143,8 +145,8 @@ SH
     HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$fixture/bin/yadem" no-args value
 
     assert_failure
-    assert_output_contains "Unknown install target: value"
-    assert_output_contains "no-args count: 0"
+    assert_output_contains "Target 'no-args' does not accept arguments: value"
+    assert_output_not_contains "no-args count"
 
     HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$fixture/bin/yadem" --list
 
@@ -153,6 +155,12 @@ SH
     assert_output_contains "no-args"
     assert_output_not_contains "echo-args.bash"
     assert_output_not_contains "extensionless"
+
+    HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$fixture/bin/yadem" --help
+
+    assert_success
+    assert_output_contains "echo-args [ARG...]"
+    assert_output_contains "no-args"
 
     HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$fixture/bin/yadem" extensionless
 
@@ -177,12 +185,12 @@ SH
     assert_output_contains "Run yadem --list"
 }
 
-@test "unknown second target still fails" {
+@test "targets that do not accept arguments reject trailing words" {
     run_yadem --test brew nope
 
     assert_failure
-    assert_output_contains "Unknown install target: nope"
-    assert_output_contains "Run yadem --list"
+    assert_output_contains "Target 'brew' does not accept arguments: nope"
+    assert_output_not_contains "Would install Homebrew packages from"
 }
 
 @test "brew dry-run prints Brewfile action and writes a log" {
@@ -305,6 +313,16 @@ SH
     [[ ! -e "$TEST_HOME/.vimrc" ]]
     [[ ! -e "$TEST_HOME/.zshrc" ]]
     [[ ! -e "$TEST_HOME/.bashrc" ]]
+}
+
+@test "argument-owning targets consume following tokens as arguments" {
+    setup_test_dotfiles_repo
+
+    run_yadem --test dotfiles bash
+
+    assert_failure
+    assert_output_contains "Dotfile source not found: $TEST_DOTFILES_DIR/bash"
+    assert_output_not_contains "Would clone https://github.com/Bash-it/bash-it.git"
 }
 
 @test "dotfiles install clones missing external repo before linking" {
@@ -538,14 +556,13 @@ SH
     [[ ! -e "$TEST_HOME/.zshrc" ]]
 }
 
-@test "multiple dry-run targets run in order" {
+@test "multiple positional targets are rejected" {
     run_yadem --test brew gems
 
-    assert_success
-    assert_output_contains "Would install Homebrew packages from"
-    assert_output_contains "Would install gem: standard"
-    assert_file_contains "$TEST_CACHE/yadem/install.log" "brew would-install"
-    assert_file_contains "$TEST_CACHE/yadem/install.log" "gems would-install"
+    assert_failure
+    assert_output_contains "Target 'brew' does not accept arguments: gems"
+    assert_output_not_contains "Would install Homebrew packages from"
+    [[ ! -e "$TEST_CACHE/yadem/install.log" ]]
 }
 
 @test "--all runs the configured target sequence" {
