@@ -22,6 +22,7 @@ write_yadem_config() {
     assert_output_contains "bash"
     assert_output_contains "brew"
     assert_output_contains "dotfiles"
+    assert_output_contains "dotfiles-uninstall"
     assert_output_contains "gems"
     assert_output_contains "homebrew"
     assert_output_contains "italics"
@@ -51,8 +52,67 @@ write_yadem_config() {
     assert_output_contains "Existing symlinks are replaced"
 }
 
+@test "built-in targets implement print_help without defining help" {
+    local target
+
+    for target in "$(repo_root)"/bin/yadem.d/*; do
+        [[ -f "$target" ]] || continue
+        grep -E '^print_help\(\) \{' "$target" >/dev/null
+        ! grep -E '^help\(\) \{' "$target" >/dev/null
+    done
+}
+
+@test "target help requires print_help and does not fall back to help builtin" {
+    local fixture="$BATS_TEST_TMPDIR/interface-fixture.$BATS_TEST_NUMBER"
+
+    mkdir -p "$fixture/bin/lib" "$fixture/bin/yadem.d"
+    cp "$(repo_root)/bin/yadem" "$fixture/bin/yadem"
+    cp "$(repo_root)/bin/lib/yadem.sh" "$fixture/bin/lib/yadem.sh"
+    cat > "$fixture/bin/yadem.d/legacy-help" <<'SH'
+#!/usr/bin/env bash
+
+install() {
+    say "install should not run"
+}
+
+dry_run() {
+    say "dry_run should not run"
+}
+
+help() {
+    say "legacy help should not run"
+}
+SH
+    chmod +x "$fixture/bin/yadem" "$fixture/bin/yadem.d/legacy-help"
+
+    HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$fixture/bin/yadem" legacy-help --help
+
+    assert_failure
+    assert_output_contains "Target 'legacy-help' does not implement print_help()"
+    assert_output_not_contains "legacy help should not run"
+    assert_output_not_contains "install should not run"
+    assert_output_not_contains "dry_run should not run"
+}
+
+@test "dotfiles-uninstall help describes single-file and restore modes" {
+    run_yadem dotfiles-uninstall --help
+
+    assert_success
+    assert_output_contains "USAGE: yadem [OPTIONS] dotfiles-uninstall"
+    assert_output_contains "-R, --restore"
+    assert_output_contains "zshrc or .zshrc"
+}
+
 @test "unknown target fails with a useful message" {
     run_yadem nope
+
+    assert_failure
+    assert_output_contains "Unknown install target: nope"
+    assert_output_contains "Run yadem --list"
+}
+
+@test "unknown second target still fails" {
+    run_yadem --test brew nope
 
     assert_failure
     assert_output_contains "Unknown install target: nope"
@@ -239,6 +299,96 @@ SH
     assert_success
     assert_output_contains "Warning: could not write install log: $YADEM_LOG"
     assert_output_contains "Dry run complete. Log could not be written to $YADEM_LOG"
+}
+
+@test "dotfiles-uninstall dry-run reports managed symlinks without removing them" {
+    setup_test_dotfiles_repo
+    ln -s "$TEST_DOTFILES_DIR/zshrc" "$TEST_HOME/.zshrc"
+    ln -s "$TEST_DOTFILES_DIR/bashrc" "$TEST_HOME/.bashrc"
+    ln -s /tmp/not-yadem "$TEST_HOME/.vimrc"
+
+    run_yadem --test dotfiles-uninstall
+
+    assert_success
+    assert_output_contains "Would remove symlink: $TEST_HOME/.zshrc -> $TEST_DOTFILES_DIR/zshrc"
+    assert_output_contains "Would remove symlink: $TEST_HOME/.bashrc -> $TEST_DOTFILES_DIR/bashrc"
+    assert_output_not_contains "$TEST_HOME/.vimrc"
+    [[ -L "$TEST_HOME/.zshrc" ]]
+    [[ -L "$TEST_HOME/.bashrc" ]]
+    [[ -L "$TEST_HOME/.vimrc" ]]
+}
+
+@test "dotfiles-uninstall removes only symlinks into dotfiles dir" {
+    setup_test_dotfiles_repo
+    ln -s "$TEST_DOTFILES_DIR/zshrc" "$TEST_HOME/.zshrc"
+    ln -s /tmp/not-yadem "$TEST_HOME/.bashrc"
+
+    run_yadem dotfiles-uninstall
+
+    assert_success
+    assert_output_contains "Removed symlink: $TEST_HOME/.zshrc -> $TEST_DOTFILES_DIR/zshrc"
+    assert_output_not_contains "$TEST_HOME/.bashrc"
+    [[ ! -e "$TEST_HOME/.zshrc" ]]
+    [[ -L "$TEST_HOME/.bashrc" ]]
+}
+
+@test "dotfiles-uninstall single-file mode accepts names with or without leading dot" {
+    setup_test_dotfiles_repo
+    ln -s "$TEST_DOTFILES_DIR/zshrc" "$TEST_HOME/.zshrc"
+    ln -s "$TEST_DOTFILES_DIR/bashrc" "$TEST_HOME/.bashrc"
+
+    run_yadem dotfiles-uninstall zshrc
+
+    assert_success
+    assert_output_contains "Removed symlink: $TEST_HOME/.zshrc -> $TEST_DOTFILES_DIR/zshrc"
+    [[ ! -e "$TEST_HOME/.zshrc" ]]
+    [[ -L "$TEST_HOME/.bashrc" ]]
+
+    run_yadem dotfiles-uninstall .bashrc
+
+    assert_success
+    assert_output_contains "Removed symlink: $TEST_HOME/.bashrc -> $TEST_DOTFILES_DIR/bashrc"
+    [[ ! -e "$TEST_HOME/.bashrc" ]]
+}
+
+@test "dotfiles-uninstall restore mode restores newest matching backup" {
+    setup_test_dotfiles_repo
+    mkdir -p "$TEST_CACHE/yadem"
+    printf "old backup\n" > "$TEST_CACHE/yadem/zshrc.2026-07-31"
+    printf "new backup\n" > "$TEST_CACHE/yadem/zshrc.2026-08-01"
+    ln -s "$TEST_DOTFILES_DIR/zshrc" "$TEST_HOME/.zshrc"
+
+    run_yadem dotfiles-uninstall -R zshrc
+
+    assert_success
+    assert_output_contains "Restored $TEST_HOME/.zshrc from $TEST_CACHE/yadem/zshrc.2026-08-01"
+    [[ -f "$TEST_HOME/.zshrc" ]]
+    [[ "$(cat "$TEST_HOME/.zshrc")" == "new backup" ]]
+    [[ -f "$TEST_CACHE/yadem/zshrc.2026-07-31" ]]
+    [[ ! -e "$TEST_CACHE/yadem/zshrc.2026-08-01" ]]
+}
+
+@test "dotfiles-uninstall reports no-symlink single-file case" {
+    setup_test_dotfiles_repo
+    printf "local zshrc\n" > "$TEST_HOME/.zshrc"
+
+    run_yadem dotfiles-uninstall zshrc
+
+    assert_success
+    assert_output_contains "$TEST_HOME/.zshrc is not a symlink. Skipping."
+    [[ -f "$TEST_HOME/.zshrc" ]]
+}
+
+@test "dotfiles-uninstall restore mode reports no backup" {
+    setup_test_dotfiles_repo
+    ln -s "$TEST_DOTFILES_DIR/zshrc" "$TEST_HOME/.zshrc"
+
+    run_yadem dotfiles-uninstall --restore zshrc
+
+    assert_success
+    assert_output_contains "Removed symlink: $TEST_HOME/.zshrc -> $TEST_DOTFILES_DIR/zshrc"
+    assert_output_contains "No backup found for zshrc in $TEST_CACHE/yadem"
+    [[ ! -e "$TEST_HOME/.zshrc" ]]
 }
 
 @test "multiple dry-run targets run in order" {
