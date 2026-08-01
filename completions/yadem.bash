@@ -1,6 +1,4 @@
 # Bash completion for yadem.
-# shellcheck shell=bash disable=SC2207
-
 _yadem_completion() {
     local cur
     local cmd
@@ -21,15 +19,16 @@ _yadem_completion() {
     fi
 
     target_dir="$script_dir/yadem.d"
-    for target in "$target_dir"/*; do
+    for target in "$target_dir"/*.bash; do
         [[ -f "$target" ]] || continue
-        targets+=("${target##*/}")
+        target="${target##*/}"
+        targets+=("${target%.bash}")
     done
 
     if [[ "$cur" == -* ]]; then
-        COMPREPLY=($(compgen -W "$options" -- "$cur"))
+        mapfile -t COMPREPLY < <(compgen -W "$options" -- "$cur")
     else
-        COMPREPLY=($(compgen -W "${targets[*]}" -- "$cur"))
+        mapfile -t COMPREPLY < <(compgen -W "${targets[*]}" -- "$cur")
     fi
 }
 

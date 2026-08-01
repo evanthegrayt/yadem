@@ -1,15 +1,5 @@
-#!/usr/bin/env bash
-
-dotfile_name_for() {
-    local name="$1"
-
-    name="${name#.}"
-    if [[ -z "$name" || "$name" == */* ]]; then
-        say_and_log invalid-dotfile "Invalid dotfile name: $1"
-        return 1
-    fi
-
-    printf "%s\n" "$name"
+target_accepts_args() {
+    return 0
 }
 
 readlink_target_for() {
@@ -143,7 +133,10 @@ install() {
     done
 
     if [[ -n "$single_file" ]]; then
-        name="$(dotfile_name_for "$single_file")" || return
+        if ! name="$(dotfile_name_for "$single_file")"; then
+            say_and_log invalid-dotfile "Invalid dotfile name: $single_file"
+            return 1
+        fi
         uninstall_dotfile "$name" "$restore"
     else
         uninstall_all_dotfiles "$restore"

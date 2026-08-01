@@ -1,11 +1,8 @@
-#!/usr/bin/env bash
-
 install() {
     local brew_path
     local install_command
 
-    # shellcheck disable=SC2016
-    install_command='/usr/bin/env bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+    install_command="/usr/bin/env bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
     if brew_path="$(brew_executable)"; then
         say_and_log present "Homebrew is already installed: $brew_path"

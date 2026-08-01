@@ -1,4 +1,4 @@
-# shellcheck shell=bash disable=SC2154
+# shellcheck disable=SC2154
 
 repo_root() {
     cd -- "$BATS_TEST_DIRNAME/.." && pwd -P

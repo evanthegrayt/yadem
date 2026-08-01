@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 install() {
     local shell_name
     local shell_path

@@ -13,10 +13,12 @@ INSTALL_LOG_FAILED=false
 
 list_targets() {
     local target
+    local target_name
 
-    for target in "$INSTALL_TARGET_DIR"/*; do
+    for target in "$INSTALL_TARGET_DIR"/*.bash; do
         [[ -f "$target" ]] || continue
-        printf "%s\n" "${target##*/}"
+        target_name="${target##*/}"
+        printf "%s\n" "${target_name%.bash}"
     done
 }
 
@@ -79,6 +81,17 @@ array_contains() {
     done
 
     return 1
+}
+
+dotfile_name_for() {
+    local name="$1"
+
+    name="${name#.}"
+    if [[ -z "$name" || "$name" == */* ]]; then
+        return 1
+    fi
+
+    printf "%s\n" "$name"
 }
 
 require_command() {

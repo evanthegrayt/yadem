@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 install() {
     local ruby_gem
 

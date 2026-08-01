@@ -20,8 +20,8 @@ _yadem() {
     target_dir="$script_dir/yadem.d"
     targets=()
 
-    for target in "$target_dir"/*(.N); do
-        targets+=("${target:t}")
+    for target in "$target_dir"/*.bash(.N); do
+        targets+=("${${target:t}%.bash}")
     done
 
     _arguments -C \
