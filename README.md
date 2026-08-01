@@ -42,7 +42,7 @@ Preview work without changing the system:
 
 ```sh
 bin/yadem --test dotfiles
-bin/yadem --test brew gems
+bin/yadem --test brew
 ```
 
 Run the configured setup sequence:
@@ -66,9 +66,13 @@ without the `.bash` extension, sourced by the dispatcher, and must implement:
 - `dry_run`: print what would happen without doing it
 - `print_help`: print target-specific usage
 
-Targets may implement `target_accepts_args` when they own trailing arguments.
-If that function is missing, the dispatcher assumes the target does not accept
+Targets may implement `accepted_arguments` when they own trailing arguments.
+The function prints the target's argument usage, for example `[FILE]`. If that
+function is missing, the dispatcher assumes the target does not accept
 arguments.
+
+Run one target per invocation. Use `--all` and `YADEM_ALL_TARGETS` for
+configured target sequences.
 
 The dispatcher sets these variables for every target:
 

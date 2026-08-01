@@ -1,5 +1,5 @@
-target_accepts_args() {
-    return 0
+accepted_arguments() {
+    printf "%s\n" "[OPTIONS] [FILE]"
 }
 
 readlink_target_for() {
