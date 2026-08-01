@@ -129,6 +129,7 @@ Notable settings:
 - `YADEM_DOTFILES_IGNORE`: dotfile source names to skip unless explicitly included
 - `YADEM_LOCALIZE_EXISTING`: link supported backups back as `~/.name.local`
 - `YADEM_LOCAL_FILES`: dotfiles eligible for `.local` preservation
+- `YADEM_VIM_REPO`: git repository cloned by the `vim` target
 - `YADEM_REPO_DIR`: clone destination for `repos`
 - `YADEM_REPOS`: git repositories to clone
 - `YADEM_REPO_AUTO_RUN_BUILD`: opt into running `rake`/`make` after clone
@@ -150,6 +151,23 @@ bin/yadem log path
 bin/yadem log list
 bin/yadem log show
 bin/yadem log delete
+```
+
+## Vim
+
+The `vim` target clones `YADEM_VIM_REPO` into `~/.vim`. If `~/.vim` already
+exists, the target leaves it alone by default:
+
+```sh
+bin/yadem vim
+```
+
+Pass `--force` or `-f` to clear the destination first. Existing symlinks are
+replaced. Existing regular files or directories are moved to
+`$INSTALL_CACHE_DIR/vim.<YYYY-MM-DD>` before the repository is cloned.
+
+```sh
+bin/yadem vim --force
 ```
 
 ## Dotfiles
