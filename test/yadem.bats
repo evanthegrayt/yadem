@@ -52,6 +52,48 @@ write_yadem_config() {
     assert_output_contains "Existing symlinks are replaced"
 }
 
+@test "built-in targets implement print_help without defining help" {
+    local target
+
+    for target in "$(repo_root)"/bin/yadem.d/*; do
+        [[ -f "$target" ]] || continue
+        grep -E '^print_help\(\) \{' "$target" >/dev/null
+        ! grep -E '^help\(\) \{' "$target" >/dev/null
+    done
+}
+
+@test "target help requires print_help and does not fall back to help builtin" {
+    local fixture="$BATS_TEST_TMPDIR/interface-fixture.$BATS_TEST_NUMBER"
+
+    mkdir -p "$fixture/bin/lib" "$fixture/bin/yadem.d"
+    cp "$(repo_root)/bin/yadem" "$fixture/bin/yadem"
+    cp "$(repo_root)/bin/lib/yadem.sh" "$fixture/bin/lib/yadem.sh"
+    cat > "$fixture/bin/yadem.d/legacy-help" <<'SH'
+#!/usr/bin/env bash
+
+install() {
+    say "install should not run"
+}
+
+dry_run() {
+    say "dry_run should not run"
+}
+
+help() {
+    say "legacy help should not run"
+}
+SH
+    chmod +x "$fixture/bin/yadem" "$fixture/bin/yadem.d/legacy-help"
+
+    HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$fixture/bin/yadem" legacy-help --help
+
+    assert_failure
+    assert_output_contains "Target 'legacy-help' does not implement print_help()"
+    assert_output_not_contains "legacy help should not run"
+    assert_output_not_contains "install should not run"
+    assert_output_not_contains "dry_run should not run"
+}
+
 @test "dotfiles-uninstall help describes single-file and restore modes" {
     run_yadem dotfiles-uninstall --help
 

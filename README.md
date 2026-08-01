@@ -62,7 +62,7 @@ Each executable file in `bin/yadem.d/` is a target. A target must implement:
 
 - `install`: perform the work
 - `dry_run`: print what would happen without doing it
-- `help`: print target-specific usage
+- `print_help`: print target-specific usage
 
 The dispatcher sets these variables for every target:
 

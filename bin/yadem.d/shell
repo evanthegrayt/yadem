@@ -41,7 +41,7 @@ dry_run() {
     install
 }
 
-help() {
+print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] shell
 

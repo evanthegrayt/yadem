@@ -152,7 +152,7 @@ if [[ "$target_help" == true ]]; then
         exit 1
     fi
 
-    run_target "${targets[0]}" help
+    run_target "${targets[0]}" print_help
     exit
 fi
 
