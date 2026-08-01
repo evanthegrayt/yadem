@@ -15,6 +15,14 @@ The project is split into two repositories:
 - `yadem`: installer framework, targets, config, tests, docs
 - `dotfiles`: personal dotfiles consumed by the `dotfiles` target
 
+## Under Construction
+
+Be aware that this repository is currently under heavy active development.
+Things may change drastically while it develops, so if you like the current
+behavior, I recommend forking your own copy. Otherwise, see the
+[issues](https://github.com/evanthegrayt/yadem/issues) list to see what's on the
+roadmap!
+
 ## Bootstrap
 
 There is no way around the first few machine-level prerequisites: you need a
