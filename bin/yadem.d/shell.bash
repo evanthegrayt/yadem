@@ -1,3 +1,7 @@
+# @description Prints help for the shell target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] shell
@@ -20,6 +24,10 @@ Dry-run reports the resolved shell path without changing the login shell.
 HELP
 }
 
+# @description Changes the login shell to the configured shell name.
+# @noargs
+# @exitcode 0 Login shell changed, skipped, or dry-run reported it.
+# @exitcode 1 Configuration is invalid, the shell is missing, or `chsh` failed.
 install() {
     local shell_name
     local shell_path
@@ -56,6 +64,9 @@ install() {
     chsh -s "$shell_path"
 }
 
+# @description Previews login shell changes.
+# @noargs
+# @exitcode 0 Dry-run completed or setup was skipped.
 dry_run() {
     DRY_RUN=true
     install

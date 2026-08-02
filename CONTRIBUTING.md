@@ -55,6 +55,23 @@ bin/yadem brew
 
 Use `YADEM_ALL_TARGETS` and `bin/yadem --all` for target sequences.
 
+## Shared DSL
+
+Shared behavior belongs in `bin/lib/yadem.sh` when it is useful to target
+authors beyond one target. Keep the helper small, document it with `shdoc`
+annotations, and add tests when the helper has branching behavior.
+
+Use a DSL-minded version of the boy scout rule: each time you add or change a
+target, look for one bit of Bash complexity that could become a clear helper
+for future target authors. Do the extraction only when it keeps the current
+change focused; otherwise leave a note near the target or in the issue so the
+next pass has a clean starting point.
+
+Good DSL candidates include safe directory creation, no-overwrite file copies,
+clone-if-missing behavior, backup path selection, dry-run-aware filesystem
+changes, and consistent status/log output. Avoid helpers that know about a
+single personal repository, package list, or machine preference.
+
 ## Target Contract
 
 Each target is a non-executable Bash module named `bin/yadem.d/<name>.bash`.
@@ -110,6 +127,27 @@ Target help should usually include:
 Put `print_help()` first in each target file. When a user opens a target with
 `yadem --edit <target>`, the first visible function should describe the target
 before the implementation details begin.
+
+## Shell API Docs
+
+Use [`shdoc`](https://github.com/reconquest/shdoc)-style comments for shell
+functions. Public helpers should be documented for generated API docs; internal
+dispatcher or implementation details should also be documented in source and
+marked with `@internal` when they should not appear in public API output.
+
+Use `@stdout` for functions that return values by printing strings for command
+substitution. Use `@exitcode` for meaningful status contracts. It is fine to
+omit `@exitcode` when a tiny target wrapper has no useful contract beyond
+normal shell failure behavior.
+
+Generated docs belong under `docs/`, which is ignored on `master`.
+
+Also document uncommon Bash syntax at the point of use. Prefer a short comment
+when code relies on parameter expansion such as `${name##*/}`, process
+substitution, glob behavior, intentional subshells, sentinel return codes,
+array length checks, or zsh completion modifiers. These comments are for future
+contributors who know what the target should do but may not know the shell
+corner that makes it work.
 
 ## Technical Rules
 

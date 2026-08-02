@@ -1,4 +1,10 @@
 # Bash completion for yadem.
+#
+# @description Completes global yadem options and discovered target names in Bash.
+# @internal
+# @noargs
+# @set COMPREPLY array Bash completion candidates.
+# @exitcode 0 Completion candidates were generated.
 _yadem_completion() {
     local cur
     local cmd
@@ -13,19 +19,23 @@ _yadem_completion() {
     cmd="${COMP_WORDS[0]}"
 
     if [[ "$cmd" == */* ]]; then
+        # When completing ./bin/yadem, resolve target files relative to that path.
         script_dir="$(cd -- "$(dirname -- "$cmd")" >/dev/null 2>&1 && pwd -P)" || script_dir=""
     else
+        # For bare `yadem`, ask PATH which executable the shell would run.
         script_dir="$(cd -- "$(dirname -- "$(command -v "$cmd" 2>/dev/null)")" >/dev/null 2>&1 && pwd -P)" || script_dir=""
     fi
 
     target_dir="$script_dir/yadem.d"
     for target in "$target_dir"/*.bash; do
+        # Bash leaves an unmatched glob literal unless nullglob is enabled.
         [[ -f "$target" ]] || continue
         target="${target##*/}"
         targets+=("${target%.bash}")
     done
 
     if [[ "$cur" == -* ]]; then
+        # mapfile preserves one generated completion per array element.
         mapfile -t COMPREPLY < <(compgen -W "$options" -- "$cur")
     else
         mapfile -t COMPREPLY < <(compgen -W "${targets[*]}" -- "$cur")

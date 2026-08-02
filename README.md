@@ -1,37 +1,28 @@
 # yadem
+
 [![Language: Bash](https://img.shields.io/static/v1?label=language&message=Bash&color=4EAA25&style=flat&logo=gnubash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Completions: zsh | bash](https://img.shields.io/static/v1?label=completions&message=zsh%20%7C%20bash&color=4EAA25&style=flat&logo=shell&logoColor=white)](#usage)
-[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fevanthegrayt%2Fcdc%2Fbadge%3Fref%3Dmaster&style=flat)](https://actions-badge.atrox.dev/evanthegrayt/cdc/goto?ref=master)
+[![Completions: zsh | bash](https://img.shields.io/static/v1?label=completions&message=zsh%20%7C%20bash&color=4EAA25&style=flat&logo=shell&logoColor=white)](#bootstrap)
+[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fevanthegrayt%2Fyadem%2Fbadge%3Fref%3Dmaster&style=flat)](https://actions-badge.atrox.dev/evanthegrayt/yadem/goto?ref=master)
 
 Yet Another Dotfile and Environment Manager.
 
-`yadem` is a small target dispatcher for setting up a personal development
-environment. The command stays thin; each setup concern lives in its own target
-module under `bin/yadem.d/`.
+`yadem` is a small Bash dispatcher for machine setup targets. The long-term
+shape is a generic core plus target files that users can inspect, replace,
+fork, or publish independently. The targets bundled here are useful defaults
+and examples, but they are not the point of the project: the point is making it
+pleasant to write your own setup behavior.
 
-The project is split into two repositories:
+## Status
 
-- `yadem`: installer framework, targets, config, tests, docs
-- `dotfiles`: personal dotfiles consumed by the `dotfiles` target
-
-## Under Construction
-
-Be aware that this repository is currently under heavy active development.
-Right now, it is very specific to my own setup, but the goal is make it more
-flexible and generic as it matures. For now, consider this repo in pre-alpha,
-and check back soon!
-
-In the meantime, see the [issues
-list](https://github.com/evanthegrayt/yadem/issues) to see what's on the
-roadmap!
+This repository is still under active development. Some bundled defaults are
+still personal and may later move to a separate target repository. Core
+dispatcher behavior, self-bootstrapping support, shared helpers, tests, and
+documentation belong here.
 
 ## Bootstrap
 
-There is no way around the first few machine-level prerequisites: you need a
-shell, `git`, and usually `curl` before `yadem` can clone itself or install
-Homebrew. Those first steps belong in the README because they have to happen
-before this command exists locally.
+Clone the repository and list available targets:
 
 ```sh
 git clone https://github.com/evanthegrayt/yadem.git
@@ -39,77 +30,157 @@ cd yadem
 bin/yadem --list
 ```
 
-Once cloned, run individual targets:
+Run a target:
 
 ```sh
 bin/yadem dotfiles
-bin/yadem dotfiles zshrc
-bin/yadem dotfiles-uninstall
-bin/yadem homebrew
 bin/yadem brew
 ```
 
-Preview work without changing the system:
+Preview a target without changing the system:
 
 ```sh
 bin/yadem --test dotfiles
-bin/yadem --test brew
 ```
 
-Run the configured setup sequence:
+Run the configured sequence:
 
 ```sh
 bin/yadem --all
 ```
 
-Show target-specific help:
-
-```sh
-bin/yadem dotfiles --help
-```
-
-Open a target in your editor:
+Open a target for inspection or editing:
 
 ```sh
 bin/yadem --edit dotfiles
-bin/yadem -e brew
 ```
 
-Editor resolution checks `YADEM_EDITOR` first, then `VISUAL`, then `EDITOR`,
-and falls back to `vi`.
+Editor resolution checks `YADEM_EDITOR`, then `VISUAL`, then `EDITOR`, then
+falls back to `vi`.
 
-## Target Contract
+## Writing Targets
 
-Each `*.bash` file in `bin/yadem.d/` is a target module. Targets are referenced
-without the `.bash` extension, sourced by the dispatcher, and must implement:
+Targets are Bash modules in `bin/yadem.d/` with the `.bash` extension. Users
+run them without the extension:
 
+```sh
+bin/yadem my-target
+```
+
+Each target must implement:
+
+- `print_help`: print target-specific usage and behavior
 - `install`: perform the work
-- `dry_run`: print what would happen without doing it
-- `print_help`: print target-specific usage
+- `dry_run`: report what would happen without changing the system
 
-Targets may implement `accepted_arguments` when they own trailing arguments.
-The function prints the target's argument usage, for example `[FILE]`. If that
-function is missing, the dispatcher assumes the target does not accept
-arguments.
+Targets that accept trailing arguments should also implement:
 
-Run one target per invocation. Use `--all` and `YADEM_ALL_TARGETS` for
-configured target sequences.
+```bash
+accepted_arguments() {
+    printf "%s\n" "[OPTIONS] [FILE]"
+}
+```
 
-The dispatcher sets these variables for every target:
+If `accepted_arguments` is missing, the dispatcher rejects target arguments
+before running the target.
 
-- `INSTALL_PATH`: repository root
-- `INSTALL_BIN_DIR`: `bin/`
-- `INSTALL_TARGET_DIR`: `bin/yadem.d/`
-- `INSTALL_CACHE_DIR`: cache and backup directory
-- `INSTALL_LOG`: log file path
-- `INSTALL_TARGET`: current target name
-- `DRY_RUN`: `true` or `false`
+Target files should put `print_help()` first. A user opening a target should see
+the contract before the implementation.
 
-Shared helpers live in `bin/lib/yadem.sh`.
+## Shared DSL
 
-## Targets
+Shared target helpers live in `bin/lib/yadem.sh`. Target authors should prefer
+these helpers when they fit instead of reimplementing common shell behavior.
+Current helpers include:
 
-Current targets:
+- `load_yadem_config`: load defaults and user overrides
+- `say` and `say_and_log`: print consistent target output
+- `require_command`: fail clearly when an executable is missing
+- `array_contains`: check membership in Bash arrays
+- `git_clone_url_for`: normalize repository clone URLs
+- `yadem_ensure_dir`: create a directory when missing
+- `yadem_copy_file_if_missing`: copy a file without overwriting
+- `yadem_clone_repo_if_missing`: clone a Git repository when the destination is missing
+- `yadem_prepare_destination`: preserve, replace, or back up an existing path
+- `backup_path_for` and `backup_path_for_name`: choose non-clobbering backup paths
+
+The DSL is intentionally small. New helpers should earn their place by removing
+real duplication or making target code safer for people who do not know every
+Bash edge case.
+
+## Documentation
+
+Shell API comments use the
+[`shdoc`](https://github.com/reconquest/shdoc) format. Generated API docs should
+be written under `docs/`, which is ignored on `master`.
+
+Example:
+
+```bash
+# @description Copies a regular file only when the destination does not exist.
+# @arg $1 string Source file path.
+# @arg $2 string Destination file path.
+# @exitcode 0 The file was copied, would be copied, or was skipped safely.
+# @exitcode 1 The source is missing or the copy failed.
+yadem_copy_file_if_missing() {
+    :
+}
+```
+
+Use `@stdout` for functions whose primary result is printed for command
+substitution:
+
+```bash
+# @description Builds the target path for a target name.
+# @arg $1 string Target name without `.bash`.
+# @stdout Absolute target file path.
+target_path_for() {
+    :
+}
+```
+
+Use `@internal` for dispatcher or implementation details that should remain
+documented in source but hidden from public API docs.
+
+When `shdoc` is available:
+
+```sh
+mkdir -p docs
+shdoc bin/lib/yadem.sh > docs/yadem-api.md
+```
+
+## Configuration
+
+Defaults live in `config/yademrc`. Copy it to `~/.yademrc` or set
+`YADEM_CONFIG=/path/to/yademrc` for local overrides.
+
+Common settings:
+
+- `YADEM_ALL_TARGETS`: ordered targets for `bin/yadem --all`
+- `YADEM_EDITOR`: editor command used by `bin/yadem --edit <target>`
+- `YADEM_LOG`: optional install log path override
+- `YADEM_REPO_DIR`: base directory used by repository-oriented targets
+
+Bundled targets define additional settings in their help output.
+
+Installer output is written to:
+
+```sh
+${XDG_CACHE_HOME:-$HOME/.cache}/yadem/install.log
+```
+
+Inspect the log with:
+
+```sh
+bin/yadem log path
+bin/yadem log list
+bin/yadem log show
+bin/yadem log delete
+```
+
+## Bundled Targets
+
+Bundled targets are examples and useful defaults:
 
 - `all`: run the configured `YADEM_ALL_TARGETS` sequence
 - `bash`: clone bash-it and optional custom files
@@ -121,144 +192,26 @@ Current targets:
 - `italics`: compile `xterm-256color.terminfo`
 - `log`: inspect or remove the current installer log
 - `macos`: apply macOS-specific setup
-- `repos`: clone configured git repositories
+- `repos`: clone configured Git repositories
 - `shell`: change the login shell
 - `vim`: clone vimfiles into `~/.vim`
 - `zsh`: clone oh-my-zsh and optional custom files
 
-`macos` and `shell` are intentionally not in the default `--all` sequence.
-
-## Configuration
-
-Defaults live in `config/yademrc`. Copy it to `~/.yademrc` or set
-`YADEM_CONFIG=/path/to/yademrc` for local overrides.
-
-Notable settings:
-
-- `YADEM_ALL_TARGETS`: ordered targets for `bin/yadem --all`
-- `YADEM_DOTFILES_DIR`: source directory for the `dotfiles` target
-- `YADEM_DOTFILES_REPO`: git repository cloned when dotfiles are missing
-- `YADEM_DOTFILES_REPO_DIR`: local clone destination for `YADEM_DOTFILES_REPO`
-- `YADEM_DOTFILES_IGNORE`: dotfile source names to skip unless explicitly included
-- `YADEM_EDITOR`: editor command used by `bin/yadem --edit <target>`
-- `YADEM_LOCALIZE_EXISTING`: link supported backups back as `~/.name.local`
-- `YADEM_LOCAL_FILES`: dotfiles eligible for `.local` preservation
-- `YADEM_VIM_REPO`: git repository cloned by the `vim` target
-- `YADEM_REPO_DIR`: clone destination for `repos`
-- `YADEM_REPOS`: git repositories to clone
-- `YADEM_REPO_AUTO_RUN_BUILD`: opt into running `rake`/`make` after clone
-- `YADEM_GEMS`: Ruby gems to install
-- `YADEM_LOGIN_SHELL`: shell name for the `shell` target
-
-Installer output is written to:
+Run target help for current behavior:
 
 ```sh
-${XDG_CACHE_HOME:-$HOME/.cache}/yadem/install.log
+bin/yadem dotfiles --help
+bin/yadem vim --help
 ```
 
-Set `YADEM_LOG` to override the log path.
+## Development
 
-Use the `log` target to inspect the current log:
-
-```sh
-bin/yadem log path
-bin/yadem log list
-bin/yadem log show
-bin/yadem log delete
-```
-
-## Vim
-
-The `vim` target clones `YADEM_VIM_REPO` into `~/.vim`. If `~/.vim` already
-exists, the target leaves it alone by default:
-
-```sh
-bin/yadem vim
-```
-
-Pass `--force` or `-f` to clear the destination first. Existing symlinks are
-replaced. Existing regular files or directories are moved to
-`$INSTALL_CACHE_DIR/vim.<YYYY-MM-DD>` before the repository is cloned.
-
-```sh
-bin/yadem vim --force
-```
-
-## Dotfiles
-
-The `dotfiles` target treats dotfiles as an external repository dependency. By
-default it expects:
-
-```sh
-YADEM_REPO_DIR="$HOME/workflow"
-YADEM_DOTFILES_REPO="https://github.com/evanthegrayt/dotfiles"
-YADEM_DOTFILES_REPO_DIR="$YADEM_REPO_DIR/dotfiles"
-YADEM_DOTFILES_DIR="$YADEM_DOTFILES_REPO_DIR/dotfiles"
-```
-
-If `YADEM_DOTFILES_DIR` is missing, dry-run reports the clone that would happen.
-Install clones `YADEM_DOTFILES_REPO` into `YADEM_DOTFILES_REPO_DIR`, then links
-files from `YADEM_DOTFILES_DIR` into `$HOME` with a leading dot added. For
-example, `zshrc` becomes `~/.zshrc`.
-
-Pass a single file as `name` or `.name` to install only that dotfile:
-
-```sh
-bin/yadem dotfiles zshrc
-bin/yadem dotfiles .zshrc
-```
-
-Files listed in `YADEM_DOTFILES_IGNORE` are skipped by default. Pass
-`--include-ignored` to link ignored files explicitly, including in single-file
-mode:
-
-```sh
-bin/yadem dotfiles --include-ignored README.md
-```
-
-Existing symlinks are replaced. Existing regular files are moved to
-`$INSTALL_CACHE_DIR/<name>.<YYYY-MM-DD>` before the new symlink is created.
-Existing directories are skipped.
-
-If `YADEM_LOCALIZE_EXISTING=true`, supported existing files are backed up and
-linked back as `~/.<name>.local`, preserving the old `yadem` local override
-workflow.
-
-To remove managed dotfile symlinks, run:
-
-```sh
-bin/yadem dotfiles-uninstall
-```
-
-Only symlinks pointing into `YADEM_DOTFILES_DIR` are removed. Pass a single file
-as `name` or `.name` to remove one link:
-
-```sh
-bin/yadem dotfiles-uninstall zshrc
-bin/yadem dotfiles-uninstall .zshrc
-```
-
-Add `--restore` or `-R` to move the newest matching backup from
-`INSTALL_CACHE_DIR` back into `$HOME` after the symlink is removed.
-
-## Completions
-
-Completion scripts are available in `completions/`:
-
-- `completions/yadem.bash`
-- `completions/yadem.zsh`
-
-## Tests
-
-The installer has a Bats test suite. Install `bats-core`, then run:
+Run the validation suite:
 
 ```sh
 bats -r test
 shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash config/yademrc $(find test \( -name '*.bash' -o -name '*.bats' \))
+bash -n bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash $(find test \( -name '*.bash' -o -name '*.bats' \))
+zsh -n completions/yadem.zsh
+git diff --check
 ```
-
-## Development Status
-
-This rebuild keeps `yadem` focused on the dispatcher, target scripts, config,
-tests, completions, and `Brewfile` support. Personal dotfiles live in the
-separate dotfiles repository and are consumed through the `dotfiles` target.

@@ -1,3 +1,7 @@
+# @description Prints help for the homebrew target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] homebrew
@@ -19,6 +23,10 @@ Dry-run prints the install command without running curl or modifying the system.
 HELP
 }
 
+# @description Installs Homebrew when no brew executable is available.
+# @noargs
+# @exitcode 0 Homebrew exists, was installed, or dry-run reported installation.
+# @exitcode 1 curl is missing or the Homebrew installer failed.
 install() {
     local brew_path
     local install_command
@@ -48,6 +56,9 @@ install() {
     log_event installed "Homebrew install command completed"
 }
 
+# @description Previews Homebrew installation.
+# @noargs
+# @exitcode 0 Dry-run completed.
 dry_run() {
     DRY_RUN=true
     install

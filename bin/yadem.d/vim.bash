@@ -1,3 +1,7 @@
+# @description Prints help for the vim target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] vim [OPTIONS]
@@ -25,51 +29,18 @@ files.
 HELP
 }
 
+# @description Declares that the vim target accepts target-specific options.
+# @noargs
+# @stdout Argument usage fragment.
+# @exitcode 0 Always.
 accepted_arguments() {
     printf "%s\n" "[OPTIONS]"
 }
 
-prepare_vim_destination() {
-    local directory="$1"
-    local force="$2"
-    local backup
-
-    if [[ ! -e "$directory" && ! -L "$directory" ]]; then
-        return
-    fi
-
-    if [[ "$force" != true ]]; then
-        say_and_log present "Vim files already exist: $directory"
-        return 2
-    fi
-
-    if [[ -L "$directory" ]]; then
-        if [[ "$DRY_RUN" == true ]]; then
-            say_and_log would-replace-link "Would replace symlink: $directory"
-        else
-            rm -- "$directory"
-            say_and_log replaced-link "Replaced symlink: $directory"
-        fi
-        return
-    fi
-
-    if [[ -f "$directory" || -d "$directory" ]]; then
-        backup="$(backup_path_for "$directory")"
-
-        if [[ "$DRY_RUN" == true ]]; then
-            say_and_log would-back-up "Would back up $directory to $backup"
-        else
-            mkdir -p "$INSTALL_CACHE_DIR"
-            mv -- "$directory" "$backup"
-            say_and_log backed-up "Backed up $directory to $backup"
-        fi
-        return
-    fi
-
-    say_and_log skipped-existing "Skipped existing path: $directory"
-    return 2
-}
-
+# @description Installs the configured Vim repository.
+# @arg $@ string Optional `-f` or `--force`.
+# @exitcode 0 Vim files are present, cloned, or skipped safely.
+# @exitcode 1 Options were invalid or cloning failed.
 install() {
     local force=false
     local destination_status
@@ -97,10 +68,12 @@ install() {
         shift
     done
 
-    if prepare_vim_destination "$HOME/.vim" "$force"; then
+    if yadem_prepare_destination "Vim files" "$HOME/.vim" "" "$force" "Vim files already exist: $HOME/.vim"; then
         :
     else
         destination_status=$?
+        # yadem_prepare_destination returns 2 when an existing path should be
+        # preserved, which is a successful no-op for this target.
         if [[ "$destination_status" -eq 2 ]]; then
             return
         fi
@@ -109,15 +82,18 @@ install() {
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
+        # Dry-run force mode leaves ~/.vim in place, but the real install would
+        # remove or back it up before cloning.
         say_and_log would-clone "Would clone $YADEM_VIM_REPO to $HOME/.vim"
         return
     fi
 
-    require_command git || return
-    say_and_log cloning "Cloning $YADEM_VIM_REPO to $HOME/.vim"
-    git clone --recursive "$YADEM_VIM_REPO" "$HOME/.vim"
+    yadem_clone_repo_if_missing vim "$YADEM_VIM_REPO" "$HOME/.vim" true
 }
 
+# @description Previews the vim target.
+# @arg $@ string Optional `-f` or `--force`.
+# @exitcode 0 Dry-run completed.
 dry_run() {
     DRY_RUN=true
     install "$@"

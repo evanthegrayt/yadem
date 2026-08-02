@@ -1,3 +1,7 @@
+# @description Prints help for the repos target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] repos
@@ -26,13 +30,22 @@ builds.
 HELP
 }
 
+# @description Derives a local directory name from a repository URL.
+# @arg $1 string Repository URL.
+# @stdout Repository basename without a trailing `.git`.
+# @exitcode 0 Always.
 repo_name_for() {
     local repo="$1"
 
+    # Strip only a trailing .git, then take the basename after the final slash.
     repo="${repo%.git}"
     printf "%s\n" "${repo##*/}"
 }
 
+# @description Runs optional post-clone build commands for a repository.
+# @arg $1 string Cloned repository path.
+# @exitcode 0 Builds are disabled, absent, or completed.
+# @exitcode 1 A build command failed.
 run_repo_builds() {
     local repo_path="$1"
 
@@ -42,15 +55,21 @@ run_repo_builds() {
 
     if [[ -f "$repo_path/Rakefile" ]]; then
         say_and_log running-rake "Running rake in $repo_path"
+        # Use a subshell so the caller's working directory never changes.
         (cd "$repo_path" && rake)
     fi
 
     if [[ -f "$repo_path/Makefile" ]]; then
         say_and_log running-make "Running make in $repo_path"
+        # Use a subshell so the caller's working directory never changes.
         (cd "$repo_path" && make)
     fi
 }
 
+# @description Clones configured Git repositories into `YADEM_REPO_DIR`.
+# @noargs
+# @exitcode 0 Repositories are cloned, present, skipped, or dry-run reported them.
+# @exitcode 1 Git is missing or clone/build failed.
 install() {
     local repo
     local repo_name
@@ -59,6 +78,7 @@ install() {
 
     load_yadem_config
 
+    # ${#array[@]} is the number of configured array entries.
     if ((${#YADEM_REPOS[@]} == 0)); then
         say_and_log skipped "No git repositories configured"
         return
@@ -90,6 +110,9 @@ install() {
     done
 }
 
+# @description Previews configured repository cloning.
+# @noargs
+# @exitcode 0 Dry-run completed.
 dry_run() {
     DRY_RUN=true
     install
