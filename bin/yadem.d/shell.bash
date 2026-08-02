@@ -6,13 +6,13 @@ print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] shell
 
-Change the login shell to YADEM_LOGIN_SHELL.
+Change the login shell to YADEM_SHELL_LOGIN.
 
 Configuration:
-  YADEM_LOGIN_SHELL  Supported values: bash, zsh, csh
+  YADEM_SHELL_LOGIN  Supported values: bash, zsh, csh
 
 This target reads /etc/shells and uses the last executable path ending in the
-configured shell name. If YADEM_LOGIN_SHELL is empty, it skips successfully.
+configured shell name. If YADEM_SHELL_LOGIN is empty, it skips successfully.
 
 Install behavior:
   chsh -s <resolved-shell-path>
@@ -33,10 +33,10 @@ install() {
     local shell_path
 
     load_yadem_config
-    shell_name="$YADEM_LOGIN_SHELL"
+    shell_name="$YADEM_SHELL_LOGIN"
 
     if [[ -z "$shell_name" ]]; then
-        say_and_log skipped "YADEM_LOGIN_SHELL is not configured"
+        say_and_log skipped "YADEM_SHELL_LOGIN is not configured"
         return
     fi
 

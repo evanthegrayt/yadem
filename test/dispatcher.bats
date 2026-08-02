@@ -99,7 +99,7 @@ setup() {
 }
 
 @test "HOME yademrc overrides repo scalar defaults" {
-    printf "YADEM_REPO_DIR=\"%s\"\n" "$TEST_HOME/custom-workflow" > "$TEST_HOME/.yademrc"
+    printf "YADEM_REPOS_DIR=\"%s\"\n" "$TEST_HOME/custom-workflow" > "$TEST_HOME/.yademrc"
     unset YADEM_CONFIG
 
     run_yadem --test repos
@@ -124,7 +124,7 @@ setup() {
 }
 
 @test "repo config fills values left unset by user config" {
-    printf "YADEM_REPO_DIR=\"%s\"\n" "$TEST_HOME/custom-workflow" > "$TEST_HOME/.yademrc"
+    printf "YADEM_REPOS_DIR=\"%s\"\n" "$TEST_HOME/custom-workflow" > "$TEST_HOME/.yademrc"
     unset YADEM_CONFIG
 
     run_yadem --test repos

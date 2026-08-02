@@ -24,8 +24,10 @@ Configuration:
   YADEM_DOTFILES_REPO_DIR  Local clone destination
   YADEM_DOTFILES_DIR       Directory containing source dotfiles
   YADEM_DOTFILES_IGNORE    Source names skipped unless --include-ignored is set
-  YADEM_LOCALIZE_EXISTING  Link supported backups back as ~/.<name>.local
-  YADEM_LOCAL_FILES        Dotfile names eligible for .local preservation
+  YADEM_DOTFILES_LOCALIZE_EXISTING
+                            Link supported backups back as ~/.<name>.local
+  YADEM_DOTFILES_LOCAL_FILES
+                            Dotfile names eligible for .local preservation
 
 If YADEM_DOTFILES_DIR is missing, this target clones YADEM_DOTFILES_REPO into
 YADEM_DOTFILES_REPO_DIR before linking files.
@@ -106,8 +108,8 @@ link_dotfile() {
 
             if [[ "$DRY_RUN" == true ]]; then
                 say_and_log would-back-up "Would back up $target to $backup"
-                if [[ "$YADEM_LOCALIZE_EXISTING" == true ]] &&
-                    array_contains "$filename" "${YADEM_LOCAL_FILES[@]}" &&
+                if [[ "$YADEM_DOTFILES_LOCALIZE_EXISTING" == true ]] &&
+                    array_contains "$filename" "${YADEM_DOTFILES_LOCAL_FILES[@]}" &&
                     [[ ! -e "$local_target" && ! -L "$local_target" ]]; then
                     say_and_log would-link-local "Would link $local_target -> $backup"
                 fi
@@ -115,8 +117,8 @@ link_dotfile() {
             else
                 yadem_ensure_dir "$INSTALL_CACHE_DIR" || return
                 mv -- "$target" "$backup"
-                if [[ "$YADEM_LOCALIZE_EXISTING" == true ]] &&
-                    array_contains "$filename" "${YADEM_LOCAL_FILES[@]}" &&
+                if [[ "$YADEM_DOTFILES_LOCALIZE_EXISTING" == true ]] &&
+                    array_contains "$filename" "${YADEM_DOTFILES_LOCAL_FILES[@]}" &&
                     [[ ! -e "$local_target" && ! -L "$local_target" ]]; then
                     ln -s "$backup" "$local_target"
                     say_and_log linked-local "Linked $local_target -> $backup"

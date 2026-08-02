@@ -39,7 +39,7 @@ setup() {
 }
 
 @test "dotfiles repo path follows configured repo dir" {
-    write_yadem_config "YADEM_REPO_DIR=\"$TEST_HOME/custom-workflow\""
+    write_yadem_config "YADEM_REPOS_DIR=\"$TEST_HOME/custom-workflow\""
 
     run_yadem --test dotfiles
 
@@ -239,11 +239,11 @@ SH
     assert_file_contains "$TEST_CACHE/yadem/install.log" "dotfiles backed-up"
 }
 
-@test "dotfiles single-file install can preserve supported existing files as local files" {
+@test "dotfiles single-file install preserves supported existing files as local files" {
     setup_test_dotfiles_repo
     write_yadem_config \
-        "YADEM_LOCALIZE_EXISTING=true" \
-        "YADEM_LOCAL_FILES=(zshrc)"
+        "YADEM_DOTFILES_LOCALIZE_EXISTING=true" \
+        "YADEM_DOTFILES_LOCAL_FILES=(zshrc)"
     printf "local zshrc\n" > "$TEST_HOME/.zshrc"
 
     run_yadem dotfiles zshrc
@@ -272,8 +272,8 @@ SH
 @test "dotfiles install can preserve supported existing files as local files" {
     setup_test_dotfiles_repo
     write_yadem_config \
-        "YADEM_LOCALIZE_EXISTING=true" \
-        "YADEM_LOCAL_FILES=(zshrc)"
+        "YADEM_DOTFILES_LOCALIZE_EXISTING=true" \
+        "YADEM_DOTFILES_LOCAL_FILES=(zshrc)"
     printf "local zshrc\n" > "$TEST_HOME/.zshrc"
 
     run_yadem dotfiles

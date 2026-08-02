@@ -1,9 +1,9 @@
 # shellcheck shell=bash disable=SC2034
 # Default yadem configuration. Copy to ~/.yademrc and adjust locally.
 
-YADEM_REPO_DIR="${YADEM_REPO_DIR:-$HOME/workflow}"
+YADEM_REPOS_DIR="${YADEM_REPOS_DIR:-$HOME/workflow}"
 YADEM_DOTFILES_REPO="${YADEM_DOTFILES_REPO:-https://github.com/evanthegrayt/dotfiles}"
-# YADEM_DOTFILES_REPO_DIR defaults to $YADEM_REPO_DIR/dotfiles after config loads.
+# YADEM_DOTFILES_REPO_DIR defaults to $YADEM_REPOS_DIR/dotfiles after config loads.
 # YADEM_DOTFILES_DIR defaults to $YADEM_DOTFILES_REPO_DIR/dotfiles after config loads.
 
 YADEM_VIM_REPO="${YADEM_VIM_REPO:-https://github.com/evanthegrayt/vimfiles.git}"
@@ -13,10 +13,10 @@ YADEM_BASH_REPO="${YADEM_BASH_REPO:-https://github.com/Bash-it/bash-it.git}"
 YADEM_BASH_CUSTOM_REPO="${YADEM_BASH_CUSTOM_REPO:-https://github.com/evanthegrayt/bash-it-custom.git}"
 
 YADEM_SCREENSHOT_DIR="${YADEM_SCREENSHOT_DIR:-$HOME/Pictures/Screenshots}"
-YADEM_LOGIN_SHELL="${YADEM_LOGIN_SHELL:-}"
+YADEM_SHELL_LOGIN="${YADEM_SHELL_LOGIN:-}"
 YADEM_EDITOR="${YADEM_EDITOR:-}"
-YADEM_REPO_AUTO_RUN_BUILD="${YADEM_REPO_AUTO_RUN_BUILD:-false}"
-YADEM_LOCALIZE_EXISTING="${YADEM_LOCALIZE_EXISTING:-false}"
+YADEM_REPOS_AUTO_RUN_BUILD="${YADEM_REPOS_AUTO_RUN_BUILD:-false}"
+YADEM_DOTFILES_LOCALIZE_EXISTING="${YADEM_DOTFILES_LOCALIZE_EXISTING:-false}"
 
 YADEM_GIT_SSH_ENABLED="${YADEM_GIT_SSH_ENABLED:-true}"
 YADEM_GIT_SSH_KEY_PATH="${YADEM_GIT_SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
@@ -68,7 +68,7 @@ gitlab
 YADEM_GIT_SSH_KEYGEN_OPTIONS=(
 )
 
-YADEM_LOCAL_FILES=(
+YADEM_DOTFILES_LOCAL_FILES=(
 inputrc
 bashrc
 shellrc

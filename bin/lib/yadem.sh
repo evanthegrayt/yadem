@@ -173,7 +173,7 @@ yadem_active_config_paths() {
 
 # @description Loads repository defaults and user configuration into YADEM_* variables.
 # @noargs
-# @set YADEM_REPO_DIR string Directory used by repository-oriented targets.
+# @set YADEM_REPOS_DIR string Directory used by repository-oriented targets.
 # @set YADEM_ALL_TARGETS array Ordered targets used by the `all` target.
 # @set YADEM_GEMS array Ruby gems used by the `gems` target.
 # @set YADEM_REPOS array Git repositories used by the `repos` target.
@@ -198,9 +198,9 @@ load_yadem_config() {
         . "$user_config"
     fi
 
-    YADEM_REPO_DIR="${YADEM_REPO_DIR:-$HOME/workflow}"
+    YADEM_REPOS_DIR="${YADEM_REPOS_DIR:-$HOME/workflow}"
     YADEM_DOTFILES_REPO="${YADEM_DOTFILES_REPO:-https://github.com/evanthegrayt/dotfiles}"
-    YADEM_DOTFILES_REPO_DIR="${YADEM_DOTFILES_REPO_DIR:-$YADEM_REPO_DIR/dotfiles}"
+    YADEM_DOTFILES_REPO_DIR="${YADEM_DOTFILES_REPO_DIR:-$YADEM_REPOS_DIR/dotfiles}"
     YADEM_DOTFILES_DIR="${YADEM_DOTFILES_DIR:-$YADEM_DOTFILES_REPO_DIR/dotfiles}"
     YADEM_VIM_REPO="${YADEM_VIM_REPO:-https://github.com/evanthegrayt/vimfiles.git}"
     YADEM_ZSH_REPO="${YADEM_ZSH_REPO:-https://github.com/ohmyzsh/ohmyzsh.git}"
@@ -208,10 +208,10 @@ load_yadem_config() {
     YADEM_BASH_REPO="${YADEM_BASH_REPO:-https://github.com/Bash-it/bash-it.git}"
     YADEM_BASH_CUSTOM_REPO="${YADEM_BASH_CUSTOM_REPO:-https://github.com/evanthegrayt/bash-it-custom.git}"
     YADEM_SCREENSHOT_DIR="${YADEM_SCREENSHOT_DIR:-$HOME/Pictures/Screenshots}"
-    YADEM_LOGIN_SHELL="${YADEM_LOGIN_SHELL:-}"
+    YADEM_SHELL_LOGIN="${YADEM_SHELL_LOGIN:-}"
     YADEM_EDITOR="${YADEM_EDITOR:-}"
-    YADEM_REPO_AUTO_RUN_BUILD="${YADEM_REPO_AUTO_RUN_BUILD:-false}"
-    YADEM_LOCALIZE_EXISTING="${YADEM_LOCALIZE_EXISTING:-false}"
+    YADEM_REPOS_AUTO_RUN_BUILD="${YADEM_REPOS_AUTO_RUN_BUILD:-false}"
+    YADEM_DOTFILES_LOCALIZE_EXISTING="${YADEM_DOTFILES_LOCALIZE_EXISTING:-false}"
     default_git_key_label="${HOSTNAME:-$(hostname 2>/dev/null || printf "unknown-host")}"
     YADEM_GIT_SSH_ENABLED="${YADEM_GIT_SSH_ENABLED:-true}"
     YADEM_GIT_SSH_KEY_PATH="${YADEM_GIT_SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
@@ -246,8 +246,8 @@ load_yadem_config() {
         YADEM_GIT_SSH_KEYGEN_OPTIONS=()
     fi
 
-    if ! declare -p YADEM_LOCAL_FILES >/dev/null 2>&1; then
-        YADEM_LOCAL_FILES=(inputrc bashrc shellrc zshrc profile aliases irbrc pryrc cshrc bash_profile)
+    if ! declare -p YADEM_DOTFILES_LOCAL_FILES >/dev/null 2>&1; then
+        YADEM_DOTFILES_LOCAL_FILES=(inputrc bashrc shellrc zshrc profile aliases irbrc pryrc cshrc bash_profile)
     fi
 
     if ! declare -p YADEM_DOTFILES_IGNORE >/dev/null 2>&1; then

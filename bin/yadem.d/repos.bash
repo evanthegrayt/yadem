@@ -6,20 +6,20 @@ print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] repos
 
-Clone configured git repositories into YADEM_REPO_DIR.
+Clone configured git repositories into YADEM_REPOS_DIR.
 
 Configuration:
-  YADEM_REPO_DIR             Directory where repositories are cloned
-  YADEM_REPOS                Bash array of repository URLs
-  YADEM_REPO_AUTO_RUN_BUILD  Run rake/make after cloning when set to true
+  YADEM_REPOS_DIR             Directory where repositories are cloned
+  YADEM_REPOS                 Bash array of repository URLs
+  YADEM_REPOS_AUTO_RUN_BUILD  Run rake/make after cloning when set to true
 
-Each repository is cloned into YADEM_REPO_DIR using the repository basename. If
+Each repository is cloned into YADEM_REPOS_DIR using the repository basename. If
 a configured URL does not end in .git, yadem adds .git for the clone command.
 
-Existing repositories are left alone when YADEM_REPO_DIR/<name>/.git exists.
+Existing repositories are left alone when YADEM_REPOS_DIR/<name>/.git exists.
 
 Build behavior:
-  When YADEM_REPO_AUTO_RUN_BUILD=true, newly cloned repositories run rake if
+  When YADEM_REPOS_AUTO_RUN_BUILD=true, newly cloned repositories run rake if
   they have a Rakefile and make if they have a Makefile.
 
 Dry-run:
@@ -49,7 +49,7 @@ repo_name_for() {
 run_repo_builds() {
     local repo_path="$1"
 
-    if [[ "$YADEM_REPO_AUTO_RUN_BUILD" != true ]]; then
+    if [[ "$YADEM_REPOS_AUTO_RUN_BUILD" != true ]]; then
         return
     fi
 
@@ -66,7 +66,7 @@ run_repo_builds() {
     fi
 }
 
-# @description Clones configured Git repositories into `YADEM_REPO_DIR`.
+# @description Clones configured Git repositories into `YADEM_REPOS_DIR`.
 # @noargs
 # @exitcode 0 Repositories are cloned, present, skipped, or dry-run reported them.
 # @exitcode 1 Git is missing or clone/build failed.
@@ -86,12 +86,12 @@ install() {
 
     if [[ "$DRY_RUN" != true ]]; then
         require_command git || return
-        mkdir -p "$YADEM_REPO_DIR"
+        mkdir -p "$YADEM_REPOS_DIR"
     fi
 
     for repo in "${YADEM_REPOS[@]}"; do
         repo_name="$(repo_name_for "$repo")"
-        repo_path="$YADEM_REPO_DIR/$repo_name"
+        repo_path="$YADEM_REPOS_DIR/$repo_name"
         clone_url="$(git_clone_url_for "$repo")"
 
         if [[ -d "$repo_path/.git" ]]; then
