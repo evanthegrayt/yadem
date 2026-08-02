@@ -308,7 +308,7 @@ SH
     HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" PATH="$path_dir:$PATH" run yadem --test brew
 
     assert_success
-    assert_output_contains "Would install Homebrew packages from $(repo_root)/Brewfile"
+    assert_output_contains "Would install Homebrew packages from the global Brewfile"
 
     HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" PATH="$path_dir:$PATH" run yadem dotfiles --help
 
@@ -508,7 +508,7 @@ SH
 
     assert_success
     assert_output_contains "user brew help"
-    assert_output_not_contains "Install packages from the repository Brewfile"
+    assert_output_not_contains "Install Homebrew packages from Homebrew's global Brewfile"
 }
 
 @test "normal list stays compact when user targets exist" {

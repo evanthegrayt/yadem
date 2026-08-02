@@ -72,8 +72,8 @@ mkdir -p "$HOME/.local/bin"
 ln -s "$HOME/workflow/yadem/bin/yadem" "$HOME/.local/bin/yadem"
 ```
 
-Both forms resolve targets, libraries, config defaults, completions, and the
-repository `Brewfile` from the real yadem checkout.
+Both forms resolve targets, libraries, config defaults, and completions from
+the real yadem checkout.
 
 Run a target:
 
@@ -262,7 +262,7 @@ Bundled targets are examples and useful defaults:
 
 - `all`: run the configured `YADEM_ALL_TARGETS` sequence
 - `bash`: clone bash-it and optional custom files
-- `brew`: install packages from `Brewfile`
+- `brew`: install packages from Homebrew's global `Brewfile`
 - `dotfiles`: symlink dotfiles into `$HOME`
 - `dotfiles-uninstall`: remove managed dotfile symlinks from `$HOME`
 - `gems`: install configured Ruby gems
