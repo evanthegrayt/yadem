@@ -36,6 +36,45 @@ Show the resolved target files, including shadowed overrides:
 bin/yadem --list --verbose
 ```
 
+Install yadem into `PATH`:
+
+```sh
+bin/yadem --test install-self
+bin/yadem install-self
+```
+
+By default, `install-self` creates or updates this symlink:
+
+```sh
+${HOME}/.local/bin/yadem -> /path/to/yadem/bin/yadem
+```
+
+Set `YADEM_PATH_DIR` to choose another destination directory:
+
+```sh
+YADEM_PATH_DIR=/usr/local/bin bin/yadem install-self
+```
+
+The target creates the destination directory when needed and reports whether it
+is already in `PATH`. It refuses to replace an existing non-yadem path.
+
+Manual installation is also supported. Either add the repository's `bin`
+directory to `PATH`:
+
+```sh
+export PATH="$HOME/workflow/yadem/bin:$PATH"
+```
+
+Or create the symlink yourself:
+
+```sh
+mkdir -p "$HOME/.local/bin"
+ln -s "$HOME/workflow/yadem/bin/yadem" "$HOME/.local/bin/yadem"
+```
+
+Both forms resolve targets, libraries, config defaults, completions, and the
+repository `Brewfile` from the real yadem checkout.
+
 Run a target:
 
 ```sh
@@ -229,6 +268,7 @@ Bundled targets are examples and useful defaults:
 - `gems`: install configured Ruby gems
 - `git-accounts`: generate/reuse keys and help add them to GitHub/GitLab
 - `homebrew`: install Homebrew if missing
+- `install-self`: symlink yadem into `PATH`
 - `italics`: compile `xterm-256color.terminfo`
 - `log`: inspect or remove the current installer log
 - `macos`: apply macOS-specific setup

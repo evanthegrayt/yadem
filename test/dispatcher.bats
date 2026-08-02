@@ -20,6 +20,7 @@ setup() {
     assert_output_contains "gems"
     assert_output_contains "git-accounts"
     assert_output_contains "homebrew"
+    assert_output_contains "install-self"
     assert_output_contains "italics"
     assert_output_contains "log"
     assert_output_contains "macos"
@@ -290,6 +291,29 @@ SH
 
     assert_failure
     assert_output_contains "Unknown install target: extensionless"
+}
+
+@test "symlinked yadem resolves repository targets and files" {
+    local path_dir="$BATS_TEST_TMPDIR/path-bin.$BATS_TEST_NUMBER"
+
+    mkdir -p "$path_dir"
+    ln -s "$(yadem_bin)" "$path_dir/yadem"
+
+    HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" PATH="$path_dir:$PATH" run yadem --list
+
+    assert_success
+    assert_output_contains "brew"
+    assert_output_contains "dotfiles"
+
+    HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" PATH="$path_dir:$PATH" run yadem --test brew
+
+    assert_success
+    assert_output_contains "Would install Homebrew packages from $(repo_root)/Brewfile"
+
+    HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" PATH="$path_dir:$PATH" run yadem dotfiles --help
+
+    assert_success
+    assert_output_contains "USAGE: yadem [OPTIONS] dotfiles"
 }
 
 @test "--all dry-run fails when a later target does not implement dry_run" {
