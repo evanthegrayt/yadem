@@ -5,7 +5,6 @@ set -eo pipefail
 # Resolve the executable directory even when the command is invoked from elsewhere.
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly SCRIPT_DIR
-readonly TARGET_DIR="$SCRIPT_DIR/yadem.d"
 readonly LIB_PATH="$SCRIPT_DIR/lib/yadem.sh"
 
 # shellcheck source=bin/lib/yadem.sh
@@ -26,6 +25,7 @@ Options:
   -t, --test    Show what would happen without installing
   -a, --all     Run the configured target sequence
   -l, --list    List available install targets
+      --verbose Show resolved target paths with --list
   -e, --edit    Open a target in YADEM_EDITOR, VISUAL, EDITOR, or vi
   -h, --help    Display this help and exit
 
@@ -34,31 +34,6 @@ Run one target per invocation. Use --all for configured target sequences.
 Targets:
 $(list_target_usages | sed 's/^/  /')
 USAGE
-}
-
-# @description Builds the absolute path for a target name.
-# @internal
-# @arg $1 string Target name without `.bash`.
-# @stdout Absolute target file path.
-# @exitcode 0 Always.
-target_path_for() {
-    local target="$1"
-
-    printf "%s\n" "$TARGET_DIR/$target.bash"
-}
-
-# @description Checks whether a target name resolves to a target file.
-# @internal
-# @arg $1 string Target name without `.bash`.
-# @exitcode 0 The target exists and is safe to load.
-# @exitcode 1 The target is missing or has an invalid path-like name.
-target_exists() {
-    local target="$1"
-    local target_path
-
-    target_path="$(target_path_for "$target")"
-    # Reject path-like names before sourcing so targets cannot escape TARGET_DIR.
-    [[ "$target" != */* && "$target" != .* && -f "$target_path" ]]
 }
 
 # @description Prints the standard unknown-target error.
@@ -201,6 +176,7 @@ list=false
 target_help=false
 all=false
 edit=false
+verbose=false
 target=""
 target_args=()
 
@@ -239,6 +215,9 @@ while (($#)); do
             ;;
         -l|--list)
             list=true
+            ;;
+        --verbose)
+            verbose=true
             ;;
         -e|--edit)
             edit=true
@@ -287,6 +266,11 @@ if [[ "$edit" == true ]]; then
         exit 1
     fi
 
+    if [[ "$verbose" == true ]]; then
+        echo "--edit cannot be combined with --verbose." >&2
+        exit 1
+    fi
+
     if [[ "$target_help" == true ]]; then
         echo "--edit cannot be combined with target help." >&2
         exit 1
@@ -308,8 +292,18 @@ if [[ "$edit" == true ]]; then
 fi
 
 if [[ "$list" == true ]]; then
+    if [[ "$verbose" == true ]]; then
+        list_targets_verbose
+        exit
+    fi
+
     list_targets
     exit
+fi
+
+if [[ "$verbose" == true ]]; then
+    echo "--verbose requires --list." >&2
+    exit 1
 fi
 
 if [[ "$all" == true ]]; then

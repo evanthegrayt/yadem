@@ -13,6 +13,7 @@ INSTALL_LIB_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 INSTALL_BIN_DIR="$(cd -- "$INSTALL_LIB_DIR/.." && pwd -P)"
 INSTALL_PATH="$(cd -- "$INSTALL_BIN_DIR/.." && pwd -P)"
 INSTALL_TARGET_DIR="$INSTALL_BIN_DIR/yadem.d"
+INSTALL_USER_TARGET_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/yadem/yadem.d"
 INSTALL_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/yadem"
 INSTALL_LOG="${YADEM_LOG:-$INSTALL_CACHE_DIR/install.log}"
 DRY_RUN="${DRY_RUN:-false}"
@@ -20,22 +21,118 @@ INSTALL_TARGET="${INSTALL_TARGET:-yadem}"
 INSTALL_LOG_WRITTEN=false
 INSTALL_LOG_FAILED=false
 
+# @description Lists configured target directories in search order.
+# @noargs
+# @stdout One existing target directory per line.
+# @exitcode 0 Always.
+yadem_target_dirs() {
+    local configured_dirs="${YADEM_TARGET_DIRS:-$INSTALL_USER_TARGET_DIR}"
+    local target_dir
+    local -a target_dirs
+    local -a seen_dirs=()
+    local IFS=:
+
+    read -r -a target_dirs <<< "$configured_dirs"
+    target_dirs+=("$INSTALL_TARGET_DIR")
+
+    for target_dir in "${target_dirs[@]}"; do
+        [[ -n "$target_dir" && -d "$target_dir" ]] || continue
+        if array_contains "$target_dir" "${seen_dirs[@]}"; then
+            continue
+        fi
+
+        printf "%s\n" "$target_dir"
+        seen_dirs+=("$target_dir")
+    done
+}
+
+# @description Builds the preferred target path for a target name.
+# @arg $1 string Target name without `.bash`.
+# @stdout Absolute target file path.
+# @exitcode 0 The target exists in the configured search path.
+# @exitcode 1 The target is missing or has an invalid path-like name.
+target_path_for() {
+    local target="$1"
+    local target_dir
+    local target_path
+
+    # Reject path-like names before resolving so targets cannot escape target dirs.
+    [[ "$target" != */* && "$target" != .* ]] || return 1
+
+    while IFS= read -r target_dir; do
+        target_path="$target_dir/$target.bash"
+        if [[ -f "$target_path" ]]; then
+            printf "%s\n" "$target_path"
+            return
+        fi
+    done < <(yadem_target_dirs)
+
+    return 1
+}
+
+# @description Checks whether a target name resolves to a target file.
+# @arg $1 string Target name without `.bash`.
+# @exitcode 0 The target exists and is safe to load.
+# @exitcode 1 The target is missing or has an invalid path-like name.
+target_exists() {
+    target_path_for "$1" >/dev/null
+}
+
 # @description Lists available target names without the `.bash` extension.
 # @noargs
 # @stdout One target name per line.
 # @exitcode 0 Always.
 list_targets() {
     local target
+    local target_dir
     local target_name
+    local -a seen_targets=()
 
-    for target in "$INSTALL_TARGET_DIR"/*.bash; do
-        # Without nullglob, an unmatched glob is left literal; this guard skips it.
-        [[ -f "$target" ]] || continue
-        # ${var##*/} strips the longest directory prefix, leaving the basename.
-        target_name="${target##*/}"
-        # ${var%.bash} strips one trailing extension without touching the rest.
-        printf "%s\n" "${target_name%.bash}"
-    done
+    while IFS= read -r target_dir; do
+        for target in "$target_dir"/*.bash; do
+            # Without nullglob, an unmatched glob is left literal; this guard skips it.
+            [[ -f "$target" ]] || continue
+            # ${var##*/} strips the longest directory prefix, leaving the basename.
+            target_name="${target##*/}"
+            # ${var%.bash} strips one trailing extension without touching the rest.
+            target_name="${target_name%.bash}"
+            if array_contains "$target_name" "${seen_targets[@]}"; then
+                continue
+            fi
+
+            printf "%s\n" "$target_name"
+            seen_targets+=("$target_name")
+        done
+    done < <(yadem_target_dirs)
+}
+
+# @description Lists target names with the file path that would be loaded.
+# @noargs
+# @stdout One tab-separated target, path, and optional shadowed marker per line.
+# @exitcode 0 Always.
+list_targets_verbose() {
+    local target
+    local target_dir
+    local target_name
+    local status
+    local -a seen_targets=()
+
+    while IFS= read -r target_dir; do
+        for target in "$target_dir"/*.bash; do
+            [[ -f "$target" ]] || continue
+            target_name="${target##*/}"
+            target_name="${target_name%.bash}"
+            status=""
+
+            if array_contains "$target_name" "${seen_targets[@]}"; then
+                status=$'\tshadowed'
+            else
+                seen_targets+=("$target_name")
+            fi
+
+            printf "%s\t%s%s\n" "$target_name" "$target" "$status"
+        done
+    done < <(yadem_target_dirs)
 }
 
 # @description Loads repository defaults and user configuration into YADEM_* variables.
