@@ -97,6 +97,41 @@ setup() {
     [[ "$output" == "configured:$(repo_root)/bin/yadem.d/dotfiles.bash" ]]
 }
 
+@test "HOME yademrc overrides repo scalar defaults" {
+    printf "YADEM_REPO_DIR=\"%s\"\n" "$TEST_HOME/custom-workflow" > "$TEST_HOME/.yademrc"
+    unset YADEM_CONFIG
+
+    run_yadem --test repos
+
+    assert_success
+    assert_output_contains "Would clone https://github.com/evanthegrayt/dotfiles.git to $TEST_HOME/custom-workflow/dotfiles"
+}
+
+@test "YADEM_CONFIG overrides HOME yademrc" {
+    local home_editor="$BATS_TEST_TMPDIR/home-editor.$BATS_TEST_NUMBER"
+    local configured_editor="$BATS_TEST_TMPDIR/configured-editor.$BATS_TEST_NUMBER"
+
+    make_fake_editor "$home_editor" home
+    make_fake_editor "$configured_editor" configured
+    printf "YADEM_EDITOR=\"%s\"\n" "$home_editor" > "$TEST_HOME/.yademrc"
+    write_yadem_config "YADEM_EDITOR=\"$configured_editor\""
+
+    run_yadem --edit dotfiles
+
+    assert_success
+    [[ "$output" == "configured:$(repo_root)/bin/yadem.d/dotfiles.bash" ]]
+}
+
+@test "repo config fills values left unset by user config" {
+    printf "YADEM_REPO_DIR=\"%s\"\n" "$TEST_HOME/custom-workflow" > "$TEST_HOME/.yademrc"
+    unset YADEM_CONFIG
+
+    run_yadem --test repos
+
+    assert_success
+    assert_output_contains "Would clone https://github.com/evanthegrayt/list-and-grep.git to $TEST_HOME/custom-workflow/list-and-grep"
+}
+
 @test "--edit falls back to VISUAL then EDITOR then vi" {
     local visual_editor="$BATS_TEST_TMPDIR/visual-editor.$BATS_TEST_NUMBER"
     local editor_editor="$BATS_TEST_TMPDIR/editor-editor.$BATS_TEST_NUMBER"

@@ -173,9 +173,11 @@ shdoc bin/lib/yadem.sh > docs/yadem-api.md
 
 ## Configuration
 
-Defaults live in `config/yademrc`. Copy it to `~/.yademrc` for local
-overrides, or set `YADEM_CONFIG=/path/to/config` to load overrides from a
-different path. The `YADEM_CONFIG` path can have any filename.
+Defaults and examples live in `config/yademrc`. yadem loads that file first,
+then loads `${YADEM_CONFIG:-$HOME/.yademrc}` when it exists, so user config
+overrides repo defaults while unset values still come from the repo config. Set
+`YADEM_CONFIG=/path/to/config` to use a different override file; the path can
+have any filename.
 
 Common settings:
 
