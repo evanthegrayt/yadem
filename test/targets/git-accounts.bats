@@ -115,6 +115,8 @@ SH
 }
 
 @test "git-accounts generates an ssh key and uploads with authenticated cli tools" {
+    local key_mode
+
     setup_fake_git_account_tools
     export PATH="$TEST_FAKE_BIN:$PATH"
     export TEST_UPLOAD_LOG="$BATS_TEST_TMPDIR/uploads.$BATS_TEST_NUMBER"
@@ -133,6 +135,8 @@ SH
     assert_output_contains "ssh-ed25519 fake-public-key me@example.com"
     assert_output_contains "Uploaded SSH key to GitHub: Test Machine"
     assert_output_contains "Uploaded SSH key to GitLab: Test Machine"
+    key_mode="$(stat -c "%a" "$TEST_HOME/.ssh/custom_ed25519" 2>/dev/null || stat -f "%Lp" "$TEST_HOME/.ssh/custom_ed25519")"
+    [[ "$key_mode" == 600 ]]
     assert_file_contains "$TEST_UPLOAD_LOG" "gh <ssh-key> <add> <$TEST_HOME/.ssh/custom_ed25519.pub> <--title> <Test Machine> <--type> <authentication>"
     assert_file_contains "$TEST_UPLOAD_LOG" "glab <ssh-key> <add> <$TEST_HOME/.ssh/custom_ed25519.pub> <-t> <Test Machine> <--usage-type> <auth>"
     assert_file_contains "$TEST_KEYGEN_ARGS_LOG" "-N"
