@@ -1,3 +1,7 @@
+# @description Prints help for the dotfiles-uninstall target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] dotfiles-uninstall [OPTIONS] [FILE]
@@ -33,16 +37,29 @@ Dry-run reports remove and restore decisions without modifying files.
 HELP
 }
 
+# @description Declares that dotfiles-uninstall accepts options and an optional file.
+# @noargs
+# @stdout Argument usage fragment.
+# @exitcode 0 Always.
 accepted_arguments() {
     printf "%s\n" "[OPTIONS] [FILE]"
 }
 
+# @description Reads the destination for a symlink.
+# @arg $1 string Symlink path.
+# @stdout Symlink target path.
+# @exitcode 0 Symlink target was read.
+# @exitcode 1 The path is not readable as a symlink.
 readlink_target_for() {
     local target="$1"
 
     readlink "$target"
 }
 
+# @description Checks whether a symlink points into `YADEM_DOTFILES_DIR`.
+# @arg $1 string Symlink path.
+# @exitcode 0 The path is a symlink into `YADEM_DOTFILES_DIR`.
+# @exitcode 1 The path is not a managed dotfile symlink.
 symlink_points_into_dotfiles_dir() {
     local target="$1"
     local link_target
@@ -53,13 +70,21 @@ symlink_points_into_dotfiles_dir() {
     [[ "$link_target" == "$YADEM_DOTFILES_DIR"/* ]]
 }
 
+# @description Finds the newest backup path for a dotfile name.
+# @arg $1 string Dotfile filename without the leading home-directory dot.
+# @stdout Newest matching backup path.
+# @exitcode 0 A backup was found.
+# @exitcode 1 No backup was found.
 newest_backup_for() {
     local name="$1"
     local backup
     local newest=""
 
     for backup in "$INSTALL_CACHE_DIR/$name."*; do
+        # Keep broken symlink backups visible instead of letting `-e` hide them.
         [[ -e "$backup" || -L "$backup" ]] || continue
+        # [[ a > b ]] is a lexicographic comparison, which works for the
+        # YYYY-MM-DD backup suffixes used by backup_path_for_name.
         if [[ -z "$newest" || "$backup" > "$newest" ]]; then
             newest="$backup"
         fi
@@ -69,6 +94,10 @@ newest_backup_for() {
     printf "%s\n" "$newest"
 }
 
+# @description Restores the newest backup for a dotfile when available.
+# @arg $1 string Dotfile filename without the leading home-directory dot.
+# @arg $2 string Home-directory target path.
+# @exitcode 0 Backup was restored, would be restored, or was not found.
 restore_backup_for() {
     local name="$1"
     local target="$2"
@@ -86,6 +115,10 @@ restore_backup_for() {
     fi
 }
 
+# @description Removes one managed dotfile symlink.
+# @arg $1 string Dotfile filename without the leading home-directory dot.
+# @arg $2 string `true` to restore the newest backup after unlinking.
+# @exitcode 0 Dotfile was removed, restored, skipped, or would be handled.
 uninstall_dotfile() {
     local name="$1"
     local restore="$2"
@@ -115,6 +148,9 @@ uninstall_dotfile() {
     fi
 }
 
+# @description Removes all managed dotfile symlinks from `$HOME`.
+# @arg $1 string `true` to restore newest backups after unlinking.
+# @exitcode 0 Dotfiles were removed, restored, skipped, or would be handled.
 uninstall_all_dotfiles() {
     local restore="$1"
     local target
@@ -122,10 +158,13 @@ uninstall_all_dotfiles() {
     local found=false
 
     for target in "$HOME"/.[!.]* "$HOME"/..?*; do
+        # The first glob finds normal dotfiles without matching . or ..; the
+        # second catches names beginning with two dots, such as ..example.
         [[ -L "$target" ]] || continue
         symlink_points_into_dotfiles_dir "$target" || continue
 
         found=true
+        # Strip directory and one leading dot before delegating to single-file removal.
         name="${target##*/}"
         name="${name#.}"
         uninstall_dotfile "$name" "$restore"
@@ -136,6 +175,10 @@ uninstall_all_dotfiles() {
     fi
 }
 
+# @description Removes managed dotfile symlinks from `$HOME`.
+# @arg $@ string Optional `--restore` and optional dotfile name.
+# @exitcode 0 Dotfiles were removed, restored, skipped, or dry-run completed.
+# @exitcode 1 Arguments are invalid.
 install() {
     local restore=false
     local single_file=""
@@ -184,6 +227,9 @@ install() {
     fi
 }
 
+# @description Previews managed dotfile symlink removal.
+# @arg $@ string Optional `--restore` and optional dotfile name.
+# @exitcode 0 Dry-run completed.
 dry_run() {
     DRY_RUN=true
     install "$@"

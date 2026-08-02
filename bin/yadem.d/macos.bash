@@ -1,3 +1,7 @@
+# @description Prints help for the macos target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] macos
@@ -27,6 +31,10 @@ changing system settings.
 HELP
 }
 
+# @description Applies macOS-specific setup.
+# @noargs
+# @exitcode 0 Setup completed, was skipped, or dry-run reported it.
+# @exitcode 1 A macOS command failed.
 install() {
     load_yadem_config
 
@@ -55,6 +63,9 @@ install() {
     xcode-select --install
 }
 
+# @description Previews macOS-specific setup.
+# @noargs
+# @exitcode 0 Dry-run completed or the target was skipped.
 dry_run() {
     DRY_RUN=true
     install

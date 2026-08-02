@@ -1,3 +1,7 @@
+# @description Prints help for the log target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] log SUBCOMMAND
@@ -22,14 +26,27 @@ Dry-run only affects delete. It reports the file that would be removed.
 HELP
 }
 
+# @description Declares the log target subcommand argument.
+# @noargs
+# @stdout Argument usage fragment.
+# @exitcode 0 Always.
 accepted_arguments() {
     printf "%s\n" "SUBCOMMAND"
 }
 
+# @description Checks whether the current install log path exists.
+# @noargs
+# @exitcode 0 The log path exists.
+# @exitcode 1 The log path does not exist.
 log_exists() {
     [[ -e "$INSTALL_LOG" || -L "$INSTALL_LOG" ]]
 }
 
+# @description Requires the current install log path to exist.
+# @noargs
+# @stderr Missing-log message.
+# @exitcode 0 The log path exists.
+# @exitcode 1 The log path does not exist.
 require_log() {
     if log_exists; then
         return
@@ -39,6 +56,12 @@ require_log() {
     return 1
 }
 
+# @description Prints the current install log.
+# @noargs
+# @stdout Log contents.
+# @stderr Missing, non-file, or unreadable log errors.
+# @exitcode 0 The log was printed.
+# @exitcode 1 The log cannot be read.
 show_log() {
     require_log || return
 
@@ -55,6 +78,12 @@ show_log() {
     cat -- "$INSTALL_LOG"
 }
 
+# @description Deletes the current install log.
+# @noargs
+# @stdout Delete or dry-run message.
+# @stderr Missing-log or directory errors.
+# @exitcode 0 The log was deleted or dry-run reported deletion.
+# @exitcode 1 The log cannot be deleted safely.
 delete_log() {
     require_log || return
 
@@ -72,6 +101,10 @@ delete_log() {
     printf "Deleted log: %s\n" "$INSTALL_LOG"
 }
 
+# @description Dispatches the requested log subcommand.
+# @arg $1 string Optional subcommand: `path`, `list`, `show`, or `delete`.
+# @exitcode 0 Subcommand completed or help was printed.
+# @exitcode 1 The subcommand is invalid or failed.
 install() {
     local subcommand="${1:-}"
 
@@ -105,6 +138,9 @@ install() {
     esac
 }
 
+# @description Previews log target operations.
+# @arg $1 string Optional subcommand.
+# @exitcode 0 Dry-run completed or help was printed.
 dry_run() {
     DRY_RUN=true
     install "$@"

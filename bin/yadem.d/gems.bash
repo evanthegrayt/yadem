@@ -1,3 +1,7 @@
+# @description Prints help for the gems target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] gems
@@ -20,6 +24,10 @@ Dry-run lists each configured gem without installing anything.
 HELP
 }
 
+# @description Installs configured Ruby gems.
+# @noargs
+# @exitcode 0 Gems are installed, skipped, or dry-run reported them.
+# @exitcode 1 RubyGems is missing or gem installation failed.
 install() {
     local ruby_gem
 
@@ -46,6 +54,9 @@ install() {
     done
 }
 
+# @description Previews configured Ruby gem installation.
+# @noargs
+# @exitcode 0 Dry-run completed.
 dry_run() {
     DRY_RUN=true
     install

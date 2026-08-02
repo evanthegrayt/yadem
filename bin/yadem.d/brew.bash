@@ -1,3 +1,7 @@
+# @description Prints help for the brew target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] brew
@@ -20,6 +24,10 @@ Dry-run reports the Brewfile path without installing packages.
 HELP
 }
 
+# @description Installs Homebrew packages from this repository's Brewfile.
+# @noargs
+# @exitcode 0 Brewfile packages are installed or dry-run reported them.
+# @exitcode 1 Brewfile or Homebrew is missing, or bundle install failed.
 install() {
     local brewfile="$INSTALL_PATH/Brewfile"
     local brew_path
@@ -45,6 +53,9 @@ install() {
     log_event installed "Homebrew packages installed from $brewfile"
 }
 
+# @description Previews Brewfile package installation.
+# @noargs
+# @exitcode 0 Dry-run completed.
 dry_run() {
     DRY_RUN=true
     install

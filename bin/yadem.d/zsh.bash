@@ -1,3 +1,7 @@
+# @description Prints help for the zsh target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] zsh
@@ -28,73 +32,18 @@ files.
 HELP
 }
 
+# @description Declares that the zsh target accepts target-specific options.
+# @noargs
+# @stdout Argument usage fragment.
+# @exitcode 0 Always.
 accepted_arguments() {
     printf "%s\n" "[OPTIONS]"
 }
 
-clone_or_report() {
-    local name="$1"
-    local repo="$2"
-    local directory="$3"
-
-    if [[ -d "$directory/.git" || -d "$directory" ]]; then
-        say_and_log present "$name already exists: $directory"
-        return
-    fi
-
-    if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-clone "Would clone $repo to $directory"
-        return
-    fi
-
-    require_command git || return
-    say_and_log cloning "Cloning $repo to $directory"
-    git clone --recursive "$repo" "$directory"
-}
-
-prepare_custom_destination() {
-    local name="$1"
-    local directory="$2"
-    local backup_name="$3"
-    local force="$4"
-    local backup
-
-    if [[ ! -e "$directory" && ! -L "$directory" ]]; then
-        return
-    fi
-
-    if [[ "$force" != true ]]; then
-        say_and_log present "$name already exists: $directory"
-        return 2
-    fi
-
-    if [[ -L "$directory" ]]; then
-        if [[ "$DRY_RUN" == true ]]; then
-            say_and_log would-replace-link "Would replace symlink: $directory"
-        else
-            rm -- "$directory"
-            say_and_log replaced-link "Replaced symlink: $directory"
-        fi
-        return
-    fi
-
-    if [[ -f "$directory" || -d "$directory" ]]; then
-        backup="$(backup_path_for_name "$backup_name")"
-
-        if [[ "$DRY_RUN" == true ]]; then
-            say_and_log would-back-up "Would back up $directory to $backup"
-        else
-            mkdir -p "$INSTALL_CACHE_DIR"
-            mv -- "$directory" "$backup"
-            say_and_log backed-up "Backed up $directory to $backup"
-        fi
-        return
-    fi
-
-    say_and_log skipped-existing "Skipped existing path: $directory"
-    return 2
-}
-
+# @description Installs Zsh framework repositories.
+# @arg $@ string Optional `-f` or `--force`.
+# @exitcode 0 Zsh repositories are present, cloned, or skipped safely.
+# @exitcode 1 Options were invalid or a clone failed.
 install() {
     local force=false
     local destination_status
@@ -122,13 +71,15 @@ install() {
         shift
     done
 
-    clone_or_report oh-my-zsh "$YADEM_ZSH_REPO" "$HOME/.oh-my-zsh"
+    yadem_clone_repo_if_missing oh-my-zsh "$YADEM_ZSH_REPO" "$HOME/.oh-my-zsh" true
 
     if [[ -n "$YADEM_ZSH_CUSTOM_REPO" ]]; then
-        if prepare_custom_destination oh-my-zsh-custom "$HOME/.oh-my-zsh/custom" zsh-custom "$force"; then
+        if yadem_prepare_destination oh-my-zsh-custom "$HOME/.oh-my-zsh/custom" zsh-custom "$force"; then
             :
         else
             destination_status=$?
+            # yadem_prepare_destination returns 2 when an existing path should be
+            # preserved, which is a successful no-op for this target.
             if [[ "$destination_status" -eq 2 ]]; then
                 return
             fi
@@ -136,15 +87,20 @@ install() {
             return "$destination_status"
         fi
 
+        # After a dry-run force backup, the directory still exists, so report the
+        # clone that would follow instead of letting clone-if-missing say present.
         if [[ "$DRY_RUN" == true && "$force" == true &&
             ( -e "$HOME/.oh-my-zsh/custom" || -L "$HOME/.oh-my-zsh/custom" ) ]]; then
             say_and_log would-clone "Would clone $YADEM_ZSH_CUSTOM_REPO to $HOME/.oh-my-zsh/custom"
         else
-            clone_or_report oh-my-zsh-custom "$YADEM_ZSH_CUSTOM_REPO" "$HOME/.oh-my-zsh/custom"
+            yadem_clone_repo_if_missing oh-my-zsh-custom "$YADEM_ZSH_CUSTOM_REPO" "$HOME/.oh-my-zsh/custom" true
         fi
     fi
 }
 
+# @description Previews the zsh target.
+# @arg $@ string Optional `-f` or `--force`.
+# @exitcode 0 Dry-run completed.
 dry_run() {
     DRY_RUN=true
     install "$@"

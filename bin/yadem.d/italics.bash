@@ -1,3 +1,7 @@
+# @description Prints help for the italics target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] italics
@@ -22,6 +26,10 @@ Dry-run reports the dotfiles clone if needed and the tic command that would run.
 HELP
 }
 
+# @description Compiles the configured terminal italics terminfo file.
+# @noargs
+# @exitcode 0 Terminfo was compiled or dry-run reported it.
+# @exitcode 1 The source file or `tic` command is missing.
 install() {
     local terminfo
     local source_status=0
@@ -53,6 +61,9 @@ install() {
     tic "$terminfo"
 }
 
+# @description Previews terminal italics setup.
+# @noargs
+# @exitcode 0 Dry-run completed.
 dry_run() {
     DRY_RUN=true
     install

@@ -1,3 +1,7 @@
+# @description Prints help for the dotfiles target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] dotfiles [OPTIONS] [FILE]
@@ -41,18 +45,33 @@ files.
 HELP
 }
 
+# @description Declares that the dotfiles target accepts options and an optional file.
+# @noargs
+# @stdout Argument usage fragment.
+# @exitcode 0 Always.
 accepted_arguments() {
     printf "%s\n" "[OPTIONS] [FILE]"
 }
 
+# @description Checks whether a dotfile source name is ignored.
+# @arg $1 string Dotfile source filename.
+# @arg $2 string `true` to include ignored files.
+# @exitcode 0 The dotfile is ignored.
+# @exitcode 1 The dotfile should be included.
 dotfile_is_ignored() {
     local filename="$1"
     local include_ignored="$2"
 
+    # Let `&&` preserve the predicate status: false include_ignored falls through
+    # to array_contains, while true include_ignored returns 1 ("not ignored").
     [[ "$include_ignored" != true ]] &&
         array_contains "$filename" "${YADEM_DOTFILES_IGNORE[@]}"
 }
 
+# @description Links one dotfile source into `$HOME`.
+# @arg $1 string Source file path.
+# @arg $2 string Dotfile filename without the leading home-directory dot.
+# @exitcode 0 The dotfile was linked, skipped, replaced, or would be handled.
 link_dotfile() {
     local file="$1"
     local filename="$2"
@@ -80,6 +99,8 @@ link_dotfile() {
         fi
 
         if [[ -f "$target" ]]; then
+            # Existing regular files are user data, so move them aside before
+            # creating the managed symlink.
             backup="$(backup_path_for "$target")"
             local_target="$HOME/.$filename.local"
 
@@ -92,7 +113,7 @@ link_dotfile() {
                 fi
                 say_and_log would-link "Would link $target -> $file"
             else
-                mkdir -p "$INSTALL_CACHE_DIR"
+                yadem_ensure_dir "$INSTALL_CACHE_DIR" || return
                 mv -- "$target" "$backup"
                 if [[ "$YADEM_LOCALIZE_EXISTING" == true ]] &&
                     array_contains "$filename" "${YADEM_LOCAL_FILES[@]}" &&
@@ -120,6 +141,11 @@ link_dotfile() {
     fi
 }
 
+# @description Installs a single dotfile source by name.
+# @arg $1 string Dotfile filename without the leading home-directory dot.
+# @arg $2 string `true` to include ignored dotfiles.
+# @exitcode 0 The dotfile was installed, skipped, or would be handled.
+# @exitcode 1 The source file is missing.
 install_dotfile() {
     local filename="$1"
     local include_ignored="$2"
@@ -138,12 +164,17 @@ install_dotfile() {
     link_dotfile "$file" "$filename"
 }
 
+# @description Installs all non-ignored dotfiles from `YADEM_DOTFILES_DIR`.
+# @arg $1 string `true` to include ignored dotfiles.
+# @exitcode 0 Dotfiles were installed, skipped, or would be handled.
 install_all_dotfiles() {
     local include_ignored="$1"
     local file
     local filename
 
     for file in "$YADEM_DOTFILES_DIR"/*; do
+        # If the directory is empty, the glob is literal; also include symlinks
+        # whose targets may not exist.
         [[ -e "$file" || -L "$file" ]] || continue
 
         filename="${file##*/}"
@@ -157,6 +188,10 @@ install_all_dotfiles() {
     done
 }
 
+# @description Installs configured dotfiles into `$HOME`.
+# @arg $@ string Optional `--include-ignored` and optional dotfile name.
+# @exitcode 0 Dotfiles were installed, skipped, or dry-run completed.
+# @exitcode 1 Arguments are invalid, source is missing, or clone failed.
 install() {
     local single_file=""
     local include_ignored=false
@@ -193,6 +228,7 @@ install() {
         :
     else
         source_status=$?
+        # ensure_dotfiles_source returns 2 only for dry-run "would clone".
         if [[ "$source_status" -eq 2 ]]; then
             say "Dry run complete. $(log_status_message)"
             return
@@ -218,6 +254,9 @@ install() {
     fi
 }
 
+# @description Previews dotfile installation.
+# @arg $@ string Optional `--include-ignored` and optional dotfile name.
+# @exitcode 0 Dry-run completed.
 dry_run() {
     DRY_RUN=true
     install "$@"

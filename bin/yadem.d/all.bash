@@ -1,3 +1,7 @@
+# @description Prints help for the all target.
+# @noargs
+# @stdout Target usage and behavior details.
+# @exitcode 0 Help was printed.
 print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] all
@@ -19,6 +23,10 @@ validation.
 HELP
 }
 
+# @description Runs each configured target in order.
+# @noargs
+# @exitcode 0 All configured targets completed.
+# @exitcode 1 A configured target failed.
 install() {
     local target
     local args=()
@@ -40,6 +48,9 @@ install() {
     done
 }
 
+# @description Previews the configured target sequence.
+# @noargs
+# @exitcode 0 Dry-run completed.
 dry_run() {
     DRY_RUN=true
     install

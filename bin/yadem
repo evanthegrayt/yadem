@@ -2,6 +2,7 @@
 
 set -eo pipefail
 
+# Resolve the executable directory even when the command is invoked from elsewhere.
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly SCRIPT_DIR
 readonly TARGET_DIR="$SCRIPT_DIR/yadem.d"
@@ -10,6 +11,11 @@ readonly LIB_PATH="$SCRIPT_DIR/lib/yadem.sh"
 # shellcheck source=bin/lib/yadem.sh
 . "$LIB_PATH"
 
+# @description Prints global command usage.
+# @internal
+# @noargs
+# @stdout Global yadem usage, options, and target summary.
+# @exitcode 0 Usage was printed.
 usage() {
     cat <<USAGE
 USAGE: ${0##*/} [OPTIONS] TARGET [ARGS...]
@@ -30,20 +36,36 @@ $(list_target_usages | sed 's/^/  /')
 USAGE
 }
 
+# @description Builds the absolute path for a target name.
+# @internal
+# @arg $1 string Target name without `.bash`.
+# @stdout Absolute target file path.
+# @exitcode 0 Always.
 target_path_for() {
     local target="$1"
 
     printf "%s\n" "$TARGET_DIR/$target.bash"
 }
 
+# @description Checks whether a target name resolves to a target file.
+# @internal
+# @arg $1 string Target name without `.bash`.
+# @exitcode 0 The target exists and is safe to load.
+# @exitcode 1 The target is missing or has an invalid path-like name.
 target_exists() {
     local target="$1"
     local target_path
 
     target_path="$(target_path_for "$target")"
+    # Reject path-like names before sourcing so targets cannot escape TARGET_DIR.
     [[ "$target" != */* && "$target" != .* && -f "$target_path" ]]
 }
 
+# @description Prints the standard unknown-target error.
+# @internal
+# @arg $1 string Unknown target name.
+# @stderr Error and recovery hint.
+# @exitcode 0 The message was printed.
 report_unknown_target() {
     local target="$1"
 
@@ -51,6 +73,12 @@ report_unknown_target() {
     echo "Run ${0##*/} --list to see available targets." >&2
 }
 
+# @description Reads a target's accepted trailing argument metadata.
+# @internal
+# @arg $1 string Target name without `.bash`.
+# @stdout Usage metadata printed by the target's `accepted_arguments`.
+# @exitcode 0 The target declares accepted arguments.
+# @exitcode 1 The target does not exist or does not declare accepted arguments.
 target_argument_usage() {
     local target="$1"
     local target_path
@@ -58,17 +86,25 @@ target_argument_usage() {
     target_exists "$target" || return 1
     target_path="$(target_path_for "$target")"
 
+    # Source target metadata in a subshell so helper functions or variables from
+    # one target cannot leak into global help generation for the next target.
     (
         # shellcheck source=bin/lib/yadem.sh
         . "$LIB_PATH"
         # shellcheck disable=SC1090
         . "$target_path"
 
+        # declare -F checks for a function definition without invoking it.
         declare -F accepted_arguments >/dev/null 2>&1 || exit 1
         accepted_arguments
     )
 }
 
+# @description Lists target names with target-specific argument usage when available.
+# @internal
+# @noargs
+# @stdout One target summary per line.
+# @exitcode 0 Always.
 list_target_usages() {
     local target
     local usage
@@ -79,9 +115,18 @@ list_target_usages() {
         else
             printf "%s\n" "$target"
         fi
+    # Process substitution feeds list_targets into the loop without a pipeline
+    # subshell, so variables assigned in the loop would remain available here.
     done < <(list_targets)
 }
 
+# @description Loads a target and invokes one command function inside an isolated subshell.
+# @internal
+# @arg $1 string Target name without `.bash`.
+# @arg $2 string Target command function, usually `install`, `dry_run`, or `print_help`.
+# @arg $@ string Arguments passed through to the target command.
+# @exitcode 0 The target command succeeded.
+# @exitcode 1 The target is unknown or does not implement the command.
 run_target() {
     local target="$1"
     local command="$2"
@@ -95,6 +140,8 @@ run_target() {
 
     target_path="$(target_path_for "$target")"
 
+    # Run every target in a subshell so sourced target functions, target-local
+    # globals, and DRY_RUN/INSTALL_TARGET changes do not leak into the dispatcher.
     (
         set -eo pipefail
 
@@ -117,6 +164,11 @@ run_target() {
     )
 }
 
+# @description Opens a target file in the configured editor.
+# @internal
+# @arg $1 string Target name without `.bash`.
+# @exitcode 0 The editor process replaces yadem.
+# @exitcode 1 The target is unknown or editor resolution fails.
 edit_target() {
     local target="$1"
     local target_path
@@ -133,6 +185,8 @@ edit_target() {
     # YADEM_EDITOR is loaded in this shell by load_yadem_config.
     # shellcheck disable=SC2031
     editor="${YADEM_EDITOR:-${VISUAL:-${EDITOR:-vi}}}"
+    # This intentionally supports simple editor commands like "vim -p"; it is
+    # not a full shell parser for quoted editor arguments.
     read -r -a editor_command <<< "$editor"
 
     if ((${#editor_command[@]} == 0)); then
