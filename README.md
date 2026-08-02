@@ -239,8 +239,8 @@ Completion scripts are available in `completions/`:
 The installer has a Bats test suite. Install `bats-core`, then run:
 
 ```sh
-bats test
-shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash config/yademrc test/*.bash test/*.bats
+bats -r test
+shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash config/yademrc $(find test \( -name '*.bash' -o -name '*.bats' \))
 ```
 
 ## Development Status
