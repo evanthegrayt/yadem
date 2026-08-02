@@ -18,9 +18,12 @@ The project is split into two repositories:
 ## Under Construction
 
 Be aware that this repository is currently under heavy active development.
-Things may change drastically while it develops, so if you like the current
-behavior, I recommend forking your own copy. Otherwise, see the
-[issues](https://github.com/evanthegrayt/yadem/issues) list to see what's on the
+Right now, it is very specific to my own setup, but the goal is make it more
+flexible and generic as it matures. For now, consider this repo in pre-alpha,
+and check back soon!
+
+In the meantime, see the [issues
+list](https://github.com/evanthegrayt/yadem/issues) to see what's on the
 roadmap!
 
 ## Bootstrap
