@@ -20,28 +20,30 @@ jobs:
 
       - name: Check Bash syntax
         run: |
+          shopt -s globstar
           bash -n \
             bin/yadem \
             bin/lib/yadem.sh \
             bin/yadem.d/* \
             completions/yadem.bash \
             config/yademrc \
-            test/*.bash \
-            test/*.bats
+            test/**/*.bash \
+            test/**/*.bats
 
       - name: Check zsh syntax
         run: zsh -n completions/yadem.zsh
 
       - name: Run ShellCheck
         run: |
+          shopt -s globstar
           shellcheck \
             bin/yadem \
             bin/lib/yadem.sh \
             bin/yadem.d/* \
             completions/yadem.bash \
             config/yademrc \
-            test/*.bash \
-            test/*.bats
+            test/**/*.bash \
+            test/**/*.bats
 
       - name: Run Bats tests
-        run: bats test
+        run: bats -r test

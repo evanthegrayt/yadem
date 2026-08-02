@@ -12,8 +12,8 @@ From the repository root:
 ```sh
 bin/yadem --list
 bin/yadem --help
-bats test/yadem.bats
-shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash config/yademrc test/*.bash test/*.bats
+bats -r test
+shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash config/yademrc $(find test \( -name '*.bash' -o -name '*.bats' \))
 ```
 
 Use dry-run mode while developing target behavior:
@@ -96,12 +96,15 @@ Add Bats coverage for user-visible behavior, especially:
 - backup or restore behavior
 - cases that prove unrelated files or targets are not touched
 
+Dispatcher tests live in `test/dispatcher.bats`. Target-specific tests live in
+`test/targets/<target>.bats`.
+
 Run before finishing:
 
 ```sh
-bats test/yadem.bats
-shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash config/yademrc test/*.bash test/*.bats
-bash -n bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash test/*.bash test/*.bats
+bats -r test
+shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash config/yademrc $(find test \( -name '*.bash' -o -name '*.bats' \))
+bash -n bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash $(find test \( -name '*.bash' -o -name '*.bats' \))
 zsh -n completions/yadem.zsh
 git diff --check
 ```

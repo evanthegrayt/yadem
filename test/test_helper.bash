@@ -1,7 +1,9 @@
 # shellcheck disable=SC2154
 
+TEST_HELPER_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+
 repo_root() {
-    cd -- "$BATS_TEST_DIRNAME/.." && pwd -P
+    cd -- "$TEST_HELPER_DIR/.." && pwd -P
 }
 
 yadem_bin() {
@@ -55,6 +57,14 @@ mkdir -p "$directory/.git"
 printf "cloned %s\n" "$repo" > "$directory/README"
 SH
     chmod +x "$TEST_FAKE_BIN/git"
+}
+
+write_yadem_config() {
+    TEST_YADEM_CONFIG="$BATS_TEST_TMPDIR/yademrc.$BATS_TEST_NUMBER"
+    export TEST_YADEM_CONFIG
+    export YADEM_CONFIG="$TEST_YADEM_CONFIG"
+
+    printf "%s\n" "$@" > "$TEST_YADEM_CONFIG"
 }
 
 assert_success() {
