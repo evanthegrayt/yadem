@@ -80,10 +80,13 @@ _yadem_completion() {
     done
 
     if [[ "$cur" == -* ]]; then
-        # mapfile preserves one generated completion per array element.
-        mapfile -t COMPREPLY < <(compgen -W "$options" -- "$cur")
+        while IFS= read -r target; do
+            COMPREPLY+=("$target")
+        done < <(compgen -W "$options" -- "$cur")
     else
-        mapfile -t COMPREPLY < <(compgen -W "${targets[*]}" -- "$cur")
+        while IFS= read -r target; do
+            COMPREPLY+=("$target")
+        done < <(compgen -W "${targets[*]}" -- "$cur")
     fi
 }
 

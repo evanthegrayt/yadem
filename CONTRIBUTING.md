@@ -153,6 +153,9 @@ corner that makes it work.
 
 - Target files use the `.bash` extension, have no shebang, and are not
   executable.
+- Maintain compatibility with macOS system Bash 3.2. Avoid Bash 4+ features
+  such as `mapfile`, `declare -A`, and newer parameter expansions unless the
+  project explicitly raises its Bash requirement.
 - Target names in docs, config, help, completion, and commands do not include
   `.bash`.
 - When adding or changing global options, target discovery, or user-facing
