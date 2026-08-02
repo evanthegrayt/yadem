@@ -25,6 +25,7 @@ Options:
   -t, --test    Show what would happen without installing
   -a, --all     Run the configured target sequence
   -l, --list    List available install targets
+      --verbose Show resolved target paths with --list
   -e, --edit    Open a target in YADEM_EDITOR, VISUAL, EDITOR, or vi
   -h, --help    Display this help and exit
 
@@ -175,6 +176,7 @@ list=false
 target_help=false
 all=false
 edit=false
+verbose=false
 target=""
 target_args=()
 
@@ -213,6 +215,9 @@ while (($#)); do
             ;;
         -l|--list)
             list=true
+            ;;
+        --verbose)
+            verbose=true
             ;;
         -e|--edit)
             edit=true
@@ -261,6 +266,11 @@ if [[ "$edit" == true ]]; then
         exit 1
     fi
 
+    if [[ "$verbose" == true ]]; then
+        echo "--edit cannot be combined with --verbose." >&2
+        exit 1
+    fi
+
     if [[ "$target_help" == true ]]; then
         echo "--edit cannot be combined with target help." >&2
         exit 1
@@ -282,8 +292,18 @@ if [[ "$edit" == true ]]; then
 fi
 
 if [[ "$list" == true ]]; then
+    if [[ "$verbose" == true ]]; then
+        list_targets_verbose
+        exit
+    fi
+
     list_targets
     exit
+fi
+
+if [[ "$verbose" == true ]]; then
+    echo "--verbose requires --list." >&2
+    exit 1
 fi
 
 if [[ "$all" == true ]]; then

@@ -30,6 +30,12 @@ cd yadem
 bin/yadem --list
 ```
 
+Show the resolved target files, including shadowed overrides:
+
+```sh
+bin/yadem --list --verbose
+```
+
 Run a target:
 
 ```sh

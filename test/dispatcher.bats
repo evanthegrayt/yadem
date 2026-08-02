@@ -366,6 +366,57 @@ SH
     assert_output_not_contains "Install packages from the repository Brewfile"
 }
 
+@test "normal list stays compact when user targets exist" {
+    local target_dir="$TEST_HOME/.config/yadem/yadem.d"
+
+    mkdir -p "$target_dir"
+    printf "\n" > "$target_dir/custom.bash"
+
+    run_yadem --list
+
+    assert_success
+    assert_output_contains "custom"
+    assert_output_contains "brew"
+    assert_output_not_contains "$target_dir/custom.bash"
+    assert_output_not_contains "$(repo_root)/bin/yadem.d/brew.bash"
+}
+
+@test "verbose list shows resolved built-in and user target paths" {
+    local target_dir="$TEST_HOME/.config/yadem/yadem.d"
+
+    mkdir -p "$target_dir"
+    printf "\n" > "$target_dir/custom.bash"
+
+    run_yadem --list --verbose
+
+    assert_success
+    assert_output_contains $'custom\t'"$target_dir/custom.bash"
+    assert_output_contains $'brew\t'"$(repo_root)/bin/yadem.d/brew.bash"
+    assert_output_not_contains "shadowed"
+}
+
+@test "verbose list shows overridden targets as shadowed" {
+    local target_dir="$TEST_HOME/.config/yadem/yadem.d"
+    local first_brew
+
+    mkdir -p "$target_dir"
+    printf "\n" > "$target_dir/brew.bash"
+
+    run_yadem --list --verbose
+
+    assert_success
+    first_brew="$(grep -m 1 $'^brew\t' <<< "$output")"
+    [[ "$first_brew" == $'brew\t'"$target_dir/brew.bash" ]]
+    assert_output_contains $'brew\t'"$(repo_root)/bin/yadem.d/brew.bash"$'\tshadowed'
+}
+
+@test "--verbose requires --list" {
+    run_yadem --verbose
+
+    assert_failure
+    assert_output_contains "--verbose requires --list."
+}
+
 @test "unknown target fails with a useful message" {
     run_yadem nope
 

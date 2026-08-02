@@ -106,6 +106,35 @@ list_targets() {
     done < <(yadem_target_dirs)
 }
 
+# @description Lists target names with the file path that would be loaded.
+# @noargs
+# @stdout One tab-separated target, path, and optional shadowed marker per line.
+# @exitcode 0 Always.
+list_targets_verbose() {
+    local target
+    local target_dir
+    local target_name
+    local status
+    local -a seen_targets=()
+
+    while IFS= read -r target_dir; do
+        for target in "$target_dir"/*.bash; do
+            [[ -f "$target" ]] || continue
+            target_name="${target##*/}"
+            target_name="${target_name%.bash}"
+            status=""
+
+            if array_contains "$target_name" "${seen_targets[@]}"; then
+                status=$'\tshadowed'
+            else
+                seen_targets+=("$target_name")
+            fi
+
+            printf "%s\t%s%s\n" "$target_name" "$target" "$status"
+        done
+    done < <(yadem_target_dirs)
+}
+
 # @description Loads repository defaults and user configuration into YADEM_* variables.
 # @noargs
 # @set YADEM_REPO_DIR string Directory used by repository-oriented targets.
