@@ -155,6 +155,9 @@ corner that makes it work.
   executable.
 - Target names in docs, config, help, completion, and commands do not include
   `.bash`.
+- When adding or changing global options, target discovery, or user-facing
+  command arguments, update Bash and Zsh completions and add completion tests
+  when behavior changes.
 - Do not support extensionless target files.
 - Do not add target-specific logic to `bin/yadem`.
 - Keep `print_help()` as the first function in target files.

@@ -61,6 +61,7 @@ _yadem() {
         '(-t --test)'{-t,--test}'[show what would happen without installing]' \
         '(-a --all)'{-a,--all}'[run the configured target sequence]' \
         '(-l --list)'{-l,--list}'[list available install targets]' \
+        '--verbose[show resolved target paths with --list]' \
         '(-e --edit)'{-e,--edit}'[open a target in an editor]' \
         '(-h --help)'{-h,--help}'[display help]' \
         '*:target:->targets'

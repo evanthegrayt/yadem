@@ -23,7 +23,7 @@ _yadem_completion() {
     local -a seen_dirs=()
     local -a seen_targets=()
     local targets=()
-    local options="-h --help -a --all -l --list -t --test -e --edit"
+    local options="-h --help -a --all -l --list -t --test -e --edit --verbose"
 
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
