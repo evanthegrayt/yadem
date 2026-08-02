@@ -292,6 +292,90 @@ SH
     assert_output_contains "Unknown install target: extensionless"
 }
 
+@test "--all dry-run fails when a later target does not implement dry_run" {
+    local target_dir="$BATS_TEST_TMPDIR/isolation-targets.$BATS_TEST_NUMBER"
+    local dry_run_count
+
+    mkdir -p "$target_dir"
+    cat > "$target_dir/target-with-dry-run.bash" <<'SH'
+print_help() {
+    say "target-with-dry-run help"
+}
+
+install() {
+    say "target-with-dry-run install should not run"
+}
+
+dry_run() {
+    say "target-with-dry-run dry_run sentinel"
+}
+SH
+    cat > "$target_dir/target-without-dry-run.bash" <<'SH'
+print_help() {
+    say "target-without-dry-run help"
+}
+
+install() {
+    say "target-without-dry-run install should not run"
+}
+SH
+    export YADEM_TARGET_DIRS="$target_dir"
+    write_yadem_config \
+        "YADEM_ALL_TARGETS=(target-with-dry-run target-without-dry-run)"
+
+    run_yadem --test --all
+
+    assert_failure
+    assert_output_contains "Running target: target-with-dry-run"
+    assert_output_contains "Running target: target-without-dry-run"
+    assert_output_contains "Target 'target-without-dry-run' does not implement dry_run()"
+    dry_run_count="$(grep -c -F "target-with-dry-run dry_run sentinel" <<< "$output" || true)"
+    [[ "$dry_run_count" == 1 ]]
+    assert_output_not_contains "target-without-dry-run install should not run"
+}
+
+@test "--all install fails when a later target does not implement install" {
+    local target_dir="$BATS_TEST_TMPDIR/isolation-targets.$BATS_TEST_NUMBER"
+    local install_count
+
+    mkdir -p "$target_dir"
+    cat > "$target_dir/target-with-install.bash" <<'SH'
+print_help() {
+    say "target-with-install help"
+}
+
+install() {
+    say "target-with-install install sentinel"
+}
+
+dry_run() {
+    say "target-with-install dry_run should not run"
+}
+SH
+    cat > "$target_dir/target-without-install.bash" <<'SH'
+print_help() {
+    say "target-without-install help"
+}
+
+dry_run() {
+    say "target-without-install dry_run should not run"
+}
+SH
+    export YADEM_TARGET_DIRS="$target_dir"
+    write_yadem_config \
+        "YADEM_ALL_TARGETS=(target-with-install target-without-install)"
+
+    run_yadem --all
+
+    assert_failure
+    assert_output_contains "Running target: target-with-install"
+    assert_output_contains "Running target: target-without-install"
+    assert_output_contains "Target 'target-without-install' does not implement install()"
+    install_count="$(grep -c -F "target-with-install install sentinel" <<< "$output" || true)"
+    [[ "$install_count" == 1 ]]
+    assert_output_not_contains "target-without-install dry_run should not run"
+}
+
 @test "default user target dir is searched before bundled targets" {
     local target_dir="$TEST_HOME/.config/yadem/yadem.d"
 
