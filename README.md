@@ -186,11 +186,19 @@ Common settings:
 
 - `YADEM_ALL_TARGETS`: ordered targets for `bin/yadem --all`
 - `YADEM_EDITOR`: editor command used by `bin/yadem --edit <target>`
+- `YADEM_REPOS_DIR`: base directory used by repository-oriented targets
+
+Target-level settings use target-specific prefixes so config stays predictable
+as more targets are added. For example, dotfiles target settings use
+`YADEM_DOTFILES_*`, Vim settings use `YADEM_VIM_*`, repository cloning settings
+use `YADEM_REPOS_*`, and shell settings use `YADEM_SHELL_*`.
+
+Additional bundled target settings:
+
 - `YADEM_GIT_ACCOUNTS`: accounts used by `bin/yadem git-accounts`
 - `YADEM_GIT_SSH_KEY_PATH`: SSH key path used by `bin/yadem git-accounts`
 - `YADEM_GIT_SSH_KEY_TYPE`: `ssh-keygen -t` value for `bin/yadem git-accounts`
 - `YADEM_LOG`: optional install log path override
-- `YADEM_REPO_DIR`: base directory used by repository-oriented targets
 
 Bundled targets define additional settings in their help output.
 

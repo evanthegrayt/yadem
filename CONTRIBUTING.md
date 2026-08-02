@@ -103,6 +103,17 @@ rejects arguments before running the target.
 Targets own their parsing, validation, and help text. Global options belong in
 `bin/yadem`; target-specific options belong in the target.
 
+## Configuration Names
+
+Keep configuration names predictable by reserving broad `YADEM_*` names for
+core dispatcher behavior and shared settings. New target-level settings should
+use a target-specific prefix, such as `YADEM_DOTFILES_*`, `YADEM_VIM_*`,
+`YADEM_REPOS_*`, or `YADEM_SHELL_*`.
+
+When migrating an existing config name to a target-specific prefix during early
+development, update the default config, docs, target help, examples, and tests
+to the new name.
+
 ## Help Text Standard
 
 Target help is part of the user interface. A technical user should be able to

@@ -129,10 +129,12 @@ Use `load_yadem_config` near the start of `install()` when a target reads
 loads `${YADEM_CONFIG:-$HOME/.yademrc}` when it exists. User config overrides
 repo defaults while unset values still fall back to the default config.
 
-Use target-owned variable names under the `YADEM_` prefix, for example
-`YADEM_NODE_VERSION` or `YADEM_WORK_NOTES_DIR`. Document each variable in
-`print_help()` and give it a safe default in the target after
-`load_yadem_config`.
+Use target-owned variable names under a target-specific `YADEM_` prefix, for
+example `YADEM_NODE_VERSION`, `YADEM_NOTES_DIR`, or
+`YADEM_WORK_NOTES_DIR`. Bundled targets follow names such as
+`YADEM_DOTFILES_*`, `YADEM_VIM_*`, `YADEM_REPOS_*`, and `YADEM_SHELL_*`.
+Document each variable in `print_help()` and give it a safe default in the
+target after `load_yadem_config`.
 
 Use `DRY_RUN` to decide whether the target may change the system. The
 dispatcher sets it to `true` for `bin/yadem --test <target>`. Most targets keep
