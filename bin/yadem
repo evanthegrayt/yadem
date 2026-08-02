@@ -2,9 +2,39 @@
 
 set -eo pipefail
 
-# Resolve the executable directory even when the command is invoked from elsewhere.
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# @description Resolves a script path by following symlinks without readlink -f.
+# @internal
+# @arg $1 string Script path.
+# @stdout Physical script path.
+# @exitcode 0 Path was resolved.
+# @exitcode 1 Path could not be resolved.
+resolve_script_path() {
+    local source="$1"
+    local source_dir
+    local linked_source
+
+    while [[ -L "$source" ]]; do
+        source_dir="$(cd -- "$(dirname -- "$source")" >/dev/null 2>&1 && pwd -P)" || return 1
+        linked_source="$(readlink "$source")" || return 1
+
+        if [[ "$linked_source" == /* ]]; then
+            source="$linked_source"
+        else
+            source="$source_dir/$linked_source"
+        fi
+    done
+
+    source_dir="$(cd -- "$(dirname -- "$source")" >/dev/null 2>&1 && pwd -P)" || return 1
+    printf "%s/%s\n" "$source_dir" "$(basename -- "$source")"
+}
+
+# Resolve the executable directory even when invoked through a PATH symlink.
+SCRIPT_PATH="$(resolve_script_path "${BASH_SOURCE[0]}")"
+readonly SCRIPT_PATH
+SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd -P)"
 readonly SCRIPT_DIR
+# shellcheck disable=SC2034 # Kept as the resolved built-in target directory.
+readonly TARGET_DIR="$SCRIPT_DIR/yadem.d"
 readonly LIB_PATH="$SCRIPT_DIR/lib/yadem.sh"
 
 # shellcheck source=bin/lib/yadem.sh

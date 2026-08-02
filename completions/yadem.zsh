@@ -24,10 +24,10 @@ _yadem() {
 
     if [[ "$cmd" == */* ]]; then
         # zsh modifiers: :h takes the dirname, :A resolves it to an absolute path.
-        script_dir="${cmd:h:A}"
+        script_dir="${cmd:A:h}"
     else
         # $commands maps executable names to the path zsh would run.
-        script_dir="${commands[$cmd]:h}"
+        script_dir="${commands[$cmd]:A:h}"
     fi
 
     install_target_dir="$script_dir/yadem.d"

@@ -25,16 +25,35 @@ _yadem_completion() {
     local targets=()
     local options="-h --help -a --all -l --list -t --test -e --edit --verbose"
 
+    _yadem_resolve_script_dir() {
+        local source="$1"
+        local source_dir
+        local linked_source
+
+        while [[ -L "$source" ]]; do
+            source_dir="$(cd -- "$(dirname -- "$source")" >/dev/null 2>&1 && pwd -P)" || return 1
+            linked_source="$(readlink "$source")" || return 1
+
+            if [[ "$linked_source" == /* ]]; then
+                source="$linked_source"
+            else
+                source="$source_dir/$linked_source"
+            fi
+        done
+
+        cd -- "$(dirname -- "$source")" >/dev/null 2>&1 && pwd -P
+    }
+
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     cmd="${COMP_WORDS[0]}"
 
     if [[ "$cmd" == */* ]]; then
         # When completing ./bin/yadem, resolve target files relative to that path.
-        script_dir="$(cd -- "$(dirname -- "$cmd")" >/dev/null 2>&1 && pwd -P)" || script_dir=""
+        script_dir="$(_yadem_resolve_script_dir "$cmd")" || script_dir=""
     else
         # For bare `yadem`, ask PATH which executable the shell would run.
-        script_dir="$(cd -- "$(dirname -- "$(command -v "$cmd" 2>/dev/null)")" >/dev/null 2>&1 && pwd -P)" || script_dir=""
+        script_dir="$(_yadem_resolve_script_dir "$(command -v "$cmd" 2>/dev/null)")" || script_dir=""
     fi
 
     install_target_dir="$script_dir/yadem.d"
