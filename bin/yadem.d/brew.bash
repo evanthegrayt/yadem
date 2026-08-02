@@ -6,51 +6,48 @@ print_help() {
     cat <<HELP
 USAGE: yadem [OPTIONS] brew
 
-Install Homebrew packages from this repository's Brewfile.
+Install Homebrew packages from Homebrew's global Brewfile.
 
-This target reads:
-  $INSTALL_PATH/Brewfile
+This target uses Homebrew's global Brewfile lookup:
+  \$HOMEBREW_BUNDLE_FILE_GLOBAL, if set
+  \${XDG_CONFIG_HOME}/homebrew/Brewfile, if XDG_CONFIG_HOME is set
+  ~/.homebrew/Brewfile
+  ~/.Brewfile
 
 It requires Homebrew to be installed first. If brew is missing, run:
   yadem homebrew
 
 Install behavior:
-  brew bundle install --file "$INSTALL_PATH/Brewfile"
+  brew bundle install --global
 
 Dry-run:
   yadem --test brew
 
-Dry-run reports the Brewfile path without installing packages.
+Dry-run reports the global Brewfile install without installing packages.
 HELP
 }
 
-# @description Installs Homebrew packages from this repository's Brewfile.
+# @description Installs Homebrew packages from Homebrew's global Brewfile.
 # @noargs
 # @exitcode 0 Brewfile packages are installed or dry-run reported them.
-# @exitcode 1 Brewfile or Homebrew is missing, or bundle install failed.
+# @exitcode 1 Homebrew is missing or bundle install failed.
 install() {
-    local brewfile="$INSTALL_PATH/Brewfile"
     local brew_path
 
-    if [[ ! -f "$brewfile" ]]; then
-        say_and_log missing-brewfile "Brewfile not found: $brewfile"
-        return 1
-    fi
-
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-install "Would install Homebrew packages from $brewfile"
+        say_and_log would-install "Would install Homebrew packages from the global Brewfile"
         return
     fi
 
     if ! brew_path="$(brew_executable)"; then
-        say_and_log missing-homebrew "Homebrew is required to install packages from $brewfile"
+        say_and_log missing-homebrew "Homebrew is required to install packages from the global Brewfile"
         say "Install Homebrew first with: bin/yadem homebrew"
         return 1
     fi
 
-    say_and_log installing "Installing Homebrew packages from $brewfile"
-    "$brew_path" bundle install --file "$brewfile"
-    log_event installed "Homebrew packages installed from $brewfile"
+    say_and_log installing "Installing Homebrew packages from the global Brewfile"
+    "$brew_path" bundle install --global
+    log_event installed "Homebrew packages installed from the global Brewfile"
 }
 
 # @description Previews Brewfile package installation.
