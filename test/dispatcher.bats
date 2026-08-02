@@ -17,6 +17,7 @@ setup() {
     assert_output_contains "dotfiles"
     assert_output_contains "dotfiles-uninstall"
     assert_output_contains "gems"
+    assert_output_contains "git-accounts"
     assert_output_contains "homebrew"
     assert_output_contains "italics"
     assert_output_contains "log"

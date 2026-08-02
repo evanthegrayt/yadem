@@ -181,6 +181,9 @@ Common settings:
 
 - `YADEM_ALL_TARGETS`: ordered targets for `bin/yadem --all`
 - `YADEM_EDITOR`: editor command used by `bin/yadem --edit <target>`
+- `YADEM_GIT_ACCOUNTS`: accounts used by `bin/yadem git-accounts`
+- `YADEM_GIT_SSH_KEY_PATH`: SSH key path used by `bin/yadem git-accounts`
+- `YADEM_GIT_SSH_KEY_TYPE`: `ssh-keygen -t` value for `bin/yadem git-accounts`
 - `YADEM_LOG`: optional install log path override
 - `YADEM_REPO_DIR`: base directory used by repository-oriented targets
 
@@ -211,6 +214,7 @@ Bundled targets are examples and useful defaults:
 - `dotfiles`: symlink dotfiles into `$HOME`
 - `dotfiles-uninstall`: remove managed dotfile symlinks from `$HOME`
 - `gems`: install configured Ruby gems
+- `git-accounts`: generate/reuse keys and help add them to GitHub/GitLab
 - `homebrew`: install Homebrew if missing
 - `italics`: compile `xterm-256color.terminfo`
 - `log`: inspect or remove the current installer log

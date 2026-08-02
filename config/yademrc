@@ -18,6 +18,17 @@ YADEM_EDITOR="${YADEM_EDITOR:-}"
 YADEM_REPO_AUTO_RUN_BUILD="${YADEM_REPO_AUTO_RUN_BUILD:-false}"
 YADEM_LOCALIZE_EXISTING="${YADEM_LOCALIZE_EXISTING:-false}"
 
+YADEM_GIT_SSH_ENABLED="${YADEM_GIT_SSH_ENABLED:-true}"
+YADEM_GIT_SSH_KEY_PATH="${YADEM_GIT_SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
+YADEM_GIT_SSH_KEY_TYPE="${YADEM_GIT_SSH_KEY_TYPE:-ed25519}"
+YADEM_GIT_SSH_COMMENT="${YADEM_GIT_SSH_COMMENT:-${USER:-yadem}@${HOSTNAME:-localhost}}"
+YADEM_GIT_KEY_TITLE="${YADEM_GIT_KEY_TITLE:-${HOSTNAME:-localhost}}"
+YADEM_GIT_AUTO_UPLOAD="${YADEM_GIT_AUTO_UPLOAD:-true}"
+YADEM_GITLAB_WEB_URL="${YADEM_GITLAB_WEB_URL:-https://gitlab.com}"
+YADEM_GPG_ENABLED="${YADEM_GPG_ENABLED:-false}"
+YADEM_GPG_KEY_ID="${YADEM_GPG_KEY_ID:-}"
+# YADEM_GPG_PUBLIC_KEY_PATH defaults to the yadem cache directory after config loads.
+
 YADEM_ALL_TARGETS=(
 homebrew
 brew
@@ -47,6 +58,14 @@ https://github.com/evanthegrayt/exed
 https://github.com/evanthegrayt/mkex
 https://github.com/evanthegrayt/bash-lib
 https://github.com/evanthegrayt/grayt-FSyH-theme
+)
+
+YADEM_GIT_ACCOUNTS=(
+github
+gitlab
+)
+
+YADEM_GIT_SSH_KEYGEN_OPTIONS=(
 )
 
 YADEM_LOCAL_FILES=(

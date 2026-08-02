@@ -145,6 +145,7 @@ list_targets_verbose() {
 load_yadem_config() {
     local default_config="$INSTALL_PATH/config/yademrc"
     local user_config="${YADEM_CONFIG:-$HOME/.yademrc}"
+    local default_git_key_label
 
     if [[ -f "$default_config" ]]; then
         # Source configs so array assignments and exported variables affect this shell.
@@ -172,6 +173,17 @@ load_yadem_config() {
     YADEM_EDITOR="${YADEM_EDITOR:-}"
     YADEM_REPO_AUTO_RUN_BUILD="${YADEM_REPO_AUTO_RUN_BUILD:-false}"
     YADEM_LOCALIZE_EXISTING="${YADEM_LOCALIZE_EXISTING:-false}"
+    default_git_key_label="${HOSTNAME:-$(hostname 2>/dev/null || printf "unknown-host")}"
+    YADEM_GIT_SSH_ENABLED="${YADEM_GIT_SSH_ENABLED:-true}"
+    YADEM_GIT_SSH_KEY_PATH="${YADEM_GIT_SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
+    YADEM_GIT_SSH_KEY_TYPE="${YADEM_GIT_SSH_KEY_TYPE:-ed25519}"
+    YADEM_GIT_SSH_COMMENT="${YADEM_GIT_SSH_COMMENT:-${USER:-yadem}@$default_git_key_label}"
+    YADEM_GIT_KEY_TITLE="${YADEM_GIT_KEY_TITLE:-$default_git_key_label}"
+    YADEM_GIT_AUTO_UPLOAD="${YADEM_GIT_AUTO_UPLOAD:-true}"
+    YADEM_GITLAB_WEB_URL="${YADEM_GITLAB_WEB_URL:-https://gitlab.com}"
+    YADEM_GPG_ENABLED="${YADEM_GPG_ENABLED:-false}"
+    YADEM_GPG_KEY_ID="${YADEM_GPG_KEY_ID:-}"
+    YADEM_GPG_PUBLIC_KEY_PATH="${YADEM_GPG_PUBLIC_KEY_PATH:-$INSTALL_CACHE_DIR/git-accounts-gpg-public-key.asc}"
 
     # declare -p distinguishes "unset" from "set but empty", which matters for
     # arrays a user may intentionally configure as empty.
@@ -185,6 +197,14 @@ load_yadem_config() {
 
     if ! declare -p YADEM_REPOS >/dev/null 2>&1; then
         YADEM_REPOS=()
+    fi
+
+    if ! declare -p YADEM_GIT_ACCOUNTS >/dev/null 2>&1; then
+        YADEM_GIT_ACCOUNTS=(github gitlab)
+    fi
+
+    if ! declare -p YADEM_GIT_SSH_KEYGEN_OPTIONS >/dev/null 2>&1; then
+        YADEM_GIT_SSH_KEYGEN_OPTIONS=()
     fi
 
     if ! declare -p YADEM_LOCAL_FILES >/dev/null 2>&1; then
