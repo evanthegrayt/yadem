@@ -224,10 +224,16 @@ log_status_message() {
 backup_path_for() {
     local target="$1"
     local name="${target##*/}"
+
+    name="${name#.}"
+    backup_path_for_name "$name"
+}
+
+backup_path_for_name() {
+    local name="$1"
     local backup
     local counter
 
-    name="${name#.}"
     backup="$INSTALL_CACHE_DIR/$name.$(date +%F)"
 
     if [[ ! -e "$backup" && ! -L "$backup" ]]; then
