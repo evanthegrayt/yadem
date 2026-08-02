@@ -255,6 +255,117 @@ SH
     assert_output_contains "Unknown install target: extensionless"
 }
 
+@test "default user target dir is searched before bundled targets" {
+    local target_dir="$TEST_HOME/.config/yadem/yadem.d"
+
+    mkdir -p "$target_dir"
+    cat > "$target_dir/custom.bash" <<'SH'
+accepted_arguments() {
+    printf "%s\n" "[VALUE]"
+}
+
+print_help() {
+    say "custom help"
+}
+
+install() {
+    printf "custom install: %s\n" "$1"
+}
+
+dry_run() {
+    printf "custom dry-run: %s\n" "$1"
+}
+SH
+
+    run_yadem --list
+
+    assert_success
+    assert_output_contains "custom"
+    assert_output_contains "brew"
+
+    run_yadem custom value
+
+    assert_success
+    assert_output_contains "custom install: value"
+
+    run_yadem custom --help
+
+    assert_success
+    assert_output_contains "custom help"
+}
+
+@test "YADEM_TARGET_DIRS can add target dirs while ignoring missing paths" {
+    local missing_dir="$BATS_TEST_TMPDIR/missing-targets.$BATS_TEST_NUMBER"
+    local not_dir="$BATS_TEST_TMPDIR/not-a-dir.$BATS_TEST_NUMBER"
+    local target_dir="$BATS_TEST_TMPDIR/user-targets.$BATS_TEST_NUMBER"
+
+    printf "not a directory\n" > "$not_dir"
+    mkdir -p "$target_dir"
+    cat > "$target_dir/external.bash" <<'SH'
+print_help() {
+    say "external help"
+}
+
+install() {
+    say "external install"
+}
+
+dry_run() {
+    say "external dry-run"
+}
+SH
+    export YADEM_TARGET_DIRS="$missing_dir:$not_dir:$target_dir"
+
+    run_yadem --list
+
+    assert_success
+    assert_output_contains "external"
+    assert_output_contains "brew"
+
+    run_yadem external
+
+    assert_success
+    assert_output_contains "external install"
+}
+
+@test "user targets override bundled targets by name" {
+    local target_dir="$TEST_HOME/.config/yadem/yadem.d"
+    local brew_count
+
+    mkdir -p "$target_dir"
+    cat > "$target_dir/brew.bash" <<'SH'
+print_help() {
+    say "user brew help"
+}
+
+install() {
+    say "user brew install"
+}
+
+dry_run() {
+    say "user brew dry-run"
+}
+SH
+
+    run_yadem --list
+
+    assert_success
+    brew_count="$(grep -c -x "brew" <<< "$output")"
+    [[ "$brew_count" == 1 ]]
+
+    run_yadem brew
+
+    assert_success
+    assert_output_contains "user brew install"
+    assert_output_not_contains "Installing Homebrew packages from"
+
+    run_yadem brew --help
+
+    assert_success
+    assert_output_contains "user brew help"
+    assert_output_not_contains "Install packages from the repository Brewfile"
+}
+
 @test "unknown target fails with a useful message" {
     run_yadem nope
 

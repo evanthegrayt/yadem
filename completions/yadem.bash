@@ -9,8 +9,19 @@ _yadem_completion() {
     local cur
     local cmd
     local script_dir
-    local target_dir
+    local install_target_dir
+    local user_target_dir
+    local configured_target_dirs
     local target
+    local target_dir
+    local target_name
+    local seen_dir
+    local seen_target
+    local already_seen
+    local old_ifs
+    local -a target_dirs=()
+    local -a seen_dirs=()
+    local -a seen_targets=()
     local targets=()
     local options="-h --help -a --all -l --list -t --test -e --edit"
 
@@ -26,12 +37,46 @@ _yadem_completion() {
         script_dir="$(cd -- "$(dirname -- "$(command -v "$cmd" 2>/dev/null)")" >/dev/null 2>&1 && pwd -P)" || script_dir=""
     fi
 
-    target_dir="$script_dir/yadem.d"
-    for target in "$target_dir"/*.bash; do
-        # Bash leaves an unmatched glob literal unless nullglob is enabled.
-        [[ -f "$target" ]] || continue
-        target="${target##*/}"
-        targets+=("${target%.bash}")
+    install_target_dir="$script_dir/yadem.d"
+    user_target_dir="${XDG_CONFIG_HOME:-$HOME/.config}/yadem/yadem.d"
+    configured_target_dirs="${YADEM_TARGET_DIRS:-$user_target_dir}"
+    old_ifs="$IFS"
+    IFS=:
+    read -r -a target_dirs <<< "$configured_target_dirs"
+    IFS="$old_ifs"
+    target_dirs+=("$install_target_dir")
+
+    for target_dir in "${target_dirs[@]}"; do
+        [[ -n "$target_dir" && -d "$target_dir" ]] || continue
+
+        already_seen=false
+        for seen_dir in "${seen_dirs[@]}"; do
+            if [[ "$seen_dir" == "$target_dir" ]]; then
+                already_seen=true
+                break
+            fi
+        done
+        [[ "$already_seen" == false ]] || continue
+        seen_dirs+=("$target_dir")
+
+        for target in "$target_dir"/*.bash; do
+            # Bash leaves an unmatched glob literal unless nullglob is enabled.
+            [[ -f "$target" ]] || continue
+            target_name="${target##*/}"
+            target_name="${target_name%.bash}"
+
+            already_seen=false
+            for seen_target in "${seen_targets[@]}"; do
+                if [[ "$seen_target" == "$target_name" ]]; then
+                    already_seen=true
+                    break
+                fi
+            done
+            [[ "$already_seen" == false ]] || continue
+
+            seen_targets+=("$target_name")
+            targets+=("$target_name")
+        done
     done
 
     if [[ "$cur" == -* ]]; then

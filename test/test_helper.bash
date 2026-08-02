@@ -18,6 +18,8 @@ setup_install_home() {
     export TEST_HOME TEST_CACHE
     export TEST_DOTFILES_REPO TEST_DOTFILES_DIR
     unset YADEM_CONFIG
+    unset YADEM_TARGET_DIRS
+    unset XDG_CONFIG_HOME
 }
 
 run_yadem() {

@@ -5,7 +5,6 @@ set -eo pipefail
 # Resolve the executable directory even when the command is invoked from elsewhere.
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly SCRIPT_DIR
-readonly TARGET_DIR="$SCRIPT_DIR/yadem.d"
 readonly LIB_PATH="$SCRIPT_DIR/lib/yadem.sh"
 
 # shellcheck source=bin/lib/yadem.sh
@@ -34,31 +33,6 @@ Run one target per invocation. Use --all for configured target sequences.
 Targets:
 $(list_target_usages | sed 's/^/  /')
 USAGE
-}
-
-# @description Builds the absolute path for a target name.
-# @internal
-# @arg $1 string Target name without `.bash`.
-# @stdout Absolute target file path.
-# @exitcode 0 Always.
-target_path_for() {
-    local target="$1"
-
-    printf "%s\n" "$TARGET_DIR/$target.bash"
-}
-
-# @description Checks whether a target name resolves to a target file.
-# @internal
-# @arg $1 string Target name without `.bash`.
-# @exitcode 0 The target exists and is safe to load.
-# @exitcode 1 The target is missing or has an invalid path-like name.
-target_exists() {
-    local target="$1"
-    local target_path
-
-    target_path="$(target_path_for "$target")"
-    # Reject path-like names before sourcing so targets cannot escape TARGET_DIR.
-    [[ "$target" != */* && "$target" != .* && -f "$target_path" ]]
 }
 
 # @description Prints the standard unknown-target error.

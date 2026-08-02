@@ -60,12 +60,28 @@ falls back to `vi`.
 
 ## Writing Targets
 
-Targets are Bash modules in `bin/yadem.d/` with the `.bash` extension. Users
-run them without the extension:
+Targets are Bash modules with the `.bash` extension. Users run them without the
+extension:
 
 ```sh
 bin/yadem my-target
 ```
+
+By default, yadem searches for targets in:
+
+- `${XDG_CONFIG_HOME:-$HOME/.config}/yadem/yadem.d`
+- the bundled `bin/yadem.d/`
+
+Set the `YADEM_TARGET_DIRS` environment variable to a colon-separated list of
+user target directories to search before bundled targets:
+
+```sh
+YADEM_TARGET_DIRS="$HOME/workflow/yadem-targets:$HOME/.local/share/yadem.d"
+```
+
+Missing paths and non-directories are ignored. When multiple directories define
+the same target name, the first match wins, so user targets can override bundled
+targets.
 
 Each target must implement:
 
