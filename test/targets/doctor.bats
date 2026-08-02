@@ -23,7 +23,7 @@ setup() {
     assert_output_contains "$(repo_root)/config/yademrc"
     assert_output_contains "$TEST_YADEM_CONFIG"
     assert_output_contains "resolved target dirs:"
-    assert_output_contains "$(repo_root)/bin/yadem.d"
+    assert_output_contains "$(repo_root)/targets"
     assert_output_contains "shadowed targets: none"
     assert_output_contains "YADEM_DOTFILES_REPO_DIR: $TEST_HOME/custom-dotfiles-repo"
     assert_output_contains "YADEM_DOTFILES_DIR: $TEST_HOME/custom-dotfiles-repo/source"
@@ -53,7 +53,7 @@ setup() {
     assert_output_contains "shadowed targets:"
     assert_output_contains "    brew"
     assert_output_contains "active: $target_dir/brew.bash"
-    assert_output_contains "shadowed: $(repo_root)/bin/yadem.d/brew.bash"
+    assert_output_contains "shadowed: $(repo_root)/targets/brew.bash"
 }
 
 @test "doctor dry-run and help follow the target contract" {

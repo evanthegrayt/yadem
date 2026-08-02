@@ -10,9 +10,10 @@
 # Resolve paths from this file instead of the caller's working directory.
 # BASH_SOURCE[0] still points here when this library is sourced.
 INSTALL_LIB_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-INSTALL_BIN_DIR="$(cd -- "$INSTALL_LIB_DIR/.." && pwd -P)"
-INSTALL_PATH="$(cd -- "$INSTALL_BIN_DIR/.." && pwd -P)"
-INSTALL_TARGET_DIR="$INSTALL_BIN_DIR/yadem.d"
+INSTALL_PATH="$(cd -- "$INSTALL_LIB_DIR/.." && pwd -P)"
+# shellcheck disable=SC2034 # Public path used by sourced targets.
+INSTALL_BIN_DIR="$INSTALL_PATH/bin"
+INSTALL_TARGET_DIR="$INSTALL_PATH/targets"
 INSTALL_USER_TARGET_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/yadem/yadem.d"
 INSTALL_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/yadem"
 INSTALL_LOG="${YADEM_LOG:-$INSTALL_CACHE_DIR/install.log}"

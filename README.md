@@ -115,7 +115,7 @@ bin/yadem my-target
 By default, yadem searches for targets in:
 
 - `${XDG_CONFIG_HOME:-$HOME/.config}/yadem/yadem.d`
-- the bundled `bin/yadem.d/`
+- the bundled `targets/`
 
 Set the `YADEM_TARGET_DIRS` environment variable to a colon-separated list of
 user target directories to search before bundled targets:
@@ -153,7 +153,7 @@ example target, see [`docs/targets.md`](docs/targets.md).
 
 ## Shared DSL
 
-Shared target helpers live in `bin/lib/yadem.sh`. Target authors should prefer
+Shared target helpers live in `lib/yadem.sh`. Target authors should prefer
 these helpers when they fit instead of reimplementing common shell behavior.
 Current helpers include:
 
@@ -210,7 +210,7 @@ When `shdoc` is available:
 
 ```sh
 mkdir -p docs
-shdoc bin/lib/yadem.sh > docs/yadem-api.md
+shdoc lib/yadem.sh > docs/yadem-api.md
 ```
 
 ## Configuration
@@ -290,8 +290,8 @@ Run the validation suite:
 
 ```sh
 bats -r test
-shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash config/yademrc $(find test \( -name '*.bash' -o -name '*.bats' \))
-bash -n bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash $(find test \( -name '*.bash' -o -name '*.bats' \))
+shellcheck bin/yadem lib/yadem.sh targets/*.bash completions/yadem.bash config/yademrc $(find test \( -name '*.bash' -o -name '*.bats' \))
+bash -n bin/yadem lib/yadem.sh targets/*.bash completions/yadem.bash $(find test \( -name '*.bash' -o -name '*.bats' \))
 zsh -n completions/yadem.zsh
 git diff --check
 ```

@@ -23,8 +23,8 @@ jobs:
           shopt -s globstar
           bash -n \
             bin/yadem \
-            bin/lib/yadem.sh \
-            bin/yadem.d/* \
+            lib/yadem.sh \
+            targets/*.bash \
             completions/yadem.bash \
             config/yademrc \
             test/**/*.bash \
@@ -38,8 +38,8 @@ jobs:
           shopt -s globstar
           shellcheck \
             bin/yadem \
-            bin/lib/yadem.sh \
-            bin/yadem.d/* \
+            lib/yadem.sh \
+            targets/*.bash \
             completions/yadem.bash \
             config/yademrc \
             test/**/*.bash \

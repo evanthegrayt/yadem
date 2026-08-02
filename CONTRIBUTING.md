@@ -28,7 +28,7 @@ bin/yadem --help
 bin/yadem dotfiles --help
 bin/yadem --edit dotfiles
 bats -r test
-shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash config/yademrc $(find test \( -name '*.bash' -o -name '*.bats' \))
+shellcheck bin/yadem lib/yadem.sh targets/*.bash completions/yadem.bash config/yademrc $(find test \( -name '*.bash' -o -name '*.bats' \))
 ```
 
 Use dry-run mode while developing target behavior:
@@ -57,7 +57,7 @@ Use `YADEM_ALL_TARGETS` and `bin/yadem --all` for target sequences.
 
 ## Shared DSL
 
-Shared behavior belongs in `bin/lib/yadem.sh` when it is useful to target
+Shared behavior belongs in `lib/yadem.sh` when it is useful to target
 authors beyond one target. Keep the helper small, document it with `shdoc`
 annotations, and add tests when the helper has branching behavior.
 
@@ -74,7 +74,7 @@ single personal repository, package list, or machine preference.
 
 ## Target Contract
 
-Each target is a non-executable Bash module named `bin/yadem.d/<name>.bash`.
+Each target is a non-executable Bash module named `targets/<name>.bash`.
 Users reference it without the extension:
 
 ```sh
@@ -175,7 +175,7 @@ corner that makes it work.
 - Do not support extensionless target files.
 - Do not add target-specific logic to `bin/yadem`.
 - Keep `print_help()` as the first function in target files.
-- Prefer shared helpers in `bin/lib/yadem.sh` only when behavior is genuinely
+- Prefer shared helpers in `lib/yadem.sh` only when behavior is genuinely
   common across targets or part of the dispatcher contract.
 - Keep dry-run behavior faithful: it should say what would happen and avoid
   modifying the filesystem.
@@ -199,8 +199,8 @@ Run before finishing:
 
 ```sh
 bats -r test
-shellcheck bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash config/yademrc $(find test \( -name '*.bash' -o -name '*.bats' \))
-bash -n bin/yadem bin/lib/yadem.sh bin/yadem.d/*.bash completions/yadem.bash $(find test \( -name '*.bash' -o -name '*.bats' \))
+shellcheck bin/yadem lib/yadem.sh targets/*.bash completions/yadem.bash config/yademrc $(find test \( -name '*.bash' -o -name '*.bats' \))
+bash -n bin/yadem lib/yadem.sh targets/*.bash completions/yadem.bash $(find test \( -name '*.bash' -o -name '*.bats' \))
 zsh -n completions/yadem.zsh
 git diff --check
 ```
