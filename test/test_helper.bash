@@ -30,6 +30,33 @@ setup_test_dotfiles_repo() {
     printf "ignored readme\n" > "$TEST_DOTFILES_DIR/README.md"
 }
 
+setup_fake_git_clone() {
+    TEST_FAKE_BIN="$BATS_TEST_TMPDIR/fake-bin.$BATS_TEST_NUMBER"
+    export TEST_FAKE_BIN
+
+    mkdir -p "$TEST_FAKE_BIN"
+    cat > "$TEST_FAKE_BIN/git" <<'SH'
+#!/usr/bin/env bash
+set -e
+
+if [[ "$1" != clone ]]; then
+    exit 1
+fi
+
+shift
+if [[ "$1" == --recursive ]]; then
+    shift
+fi
+
+repo="$1"
+directory="$2"
+
+mkdir -p "$directory/.git"
+printf "cloned %s\n" "$repo" > "$directory/README"
+SH
+    chmod +x "$TEST_FAKE_BIN/git"
+}
+
 assert_success() {
     if [[ "$status" -ne 0 ]]; then
         printf "expected success, got status %s\n" "$status" >&2
