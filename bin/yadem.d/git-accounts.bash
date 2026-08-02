@@ -125,6 +125,8 @@ prepare_ssh_key() {
         say_and_log missing-generated-key "ssh-keygen did not create expected key pair: $key_path"
         return 1
     fi
+
+    chmod 600 "$key_path"
 }
 
 # @description Prints the configured SSH public key.
