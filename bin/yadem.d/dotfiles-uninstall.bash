@@ -1,3 +1,38 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] dotfiles-uninstall [OPTIONS] [FILE]
+
+Remove managed dotfile symlinks from \$HOME.
+
+Managed symlinks are links in \$HOME that point into YADEM_DOTFILES_DIR. This
+target does not remove regular files, directories, or symlinks pointing
+somewhere else.
+
+With no FILE, all managed dotfile symlinks are removed. Pass one FILE to remove
+a single dotfile link. FILE may be written with or without the leading dot, for
+example zshrc or .zshrc:
+  yadem dotfiles-uninstall zshrc
+  yadem dotfiles-uninstall .zshrc
+
+Options:
+  -R, --restore  Restore newest matching backup from INSTALL_CACHE_DIR
+
+Configuration:
+  YADEM_DOTFILES_DIR  Directory that managed symlinks must point into
+  INSTALL_CACHE_DIR   Backup directory searched by --restore
+
+Restore behavior:
+  --restore looks for $INSTALL_CACHE_DIR/<name>.* and moves the newest matching
+  backup back to \$HOME after removing the managed symlink.
+
+Dry-run:
+  yadem --test dotfiles-uninstall
+  yadem --test dotfiles-uninstall --restore zshrc
+
+Dry-run reports remove and restore decisions without modifying files.
+HELP
+}
+
 accepted_arguments() {
     printf "%s\n" "[OPTIONS] [FILE]"
 }
@@ -152,22 +187,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install "$@"
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] dotfiles-uninstall [OPTIONS] [FILE]
-
-Remove dotfile symlinks in \$HOME that point into YADEM_DOTFILES_DIR.
-
-With no FILE, all managed dotfile symlinks are removed. FILE may be passed as
-name or .name, for example zshrc or .zshrc.
-
-Options:
-  -R, --restore    Restore newest matching backup from INSTALL_CACHE_DIR
-
-Dry-run:
-  yadem --test dotfiles-uninstall
-  yadem --test dotfiles-uninstall --restore zshrc
-HELP
 }

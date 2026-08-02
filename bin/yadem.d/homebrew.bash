@@ -1,3 +1,24 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] homebrew
+
+Install Homebrew if brew is not already available.
+
+This target first checks common brew locations and PATH. If Homebrew is already
+installed, it reports the existing brew path and exits successfully.
+
+Install behavior:
+  /usr/bin/env bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+Non-dry-run installs require curl and run Homebrew's official install script.
+
+Dry-run:
+  yadem --test homebrew
+
+Dry-run prints the install command without running curl or modifying the system.
+HELP
+}
+
 install() {
     local brew_path
     local install_command
@@ -30,12 +51,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] homebrew
-
-Install Homebrew if brew is not already available.
-HELP
 }

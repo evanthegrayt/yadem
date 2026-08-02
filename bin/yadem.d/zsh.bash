@@ -1,3 +1,28 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] zsh
+
+Clone Zsh framework repositories into your home directory.
+
+This target touches:
+  $HOME/.oh-my-zsh
+  $HOME/.oh-my-zsh/custom
+
+Configuration:
+  YADEM_ZSH_REPO         Repository cloned to ~/.oh-my-zsh
+  YADEM_ZSH_CUSTOM_REPO  Optional repository cloned to ~/.oh-my-zsh/custom
+
+Existing directories are left alone. This target does not update or replace an
+existing clone.
+
+Dry-run:
+  yadem --test zsh
+
+Dry-run reports which repositories would be cloned without creating
+directories.
+HELP
+}
+
 clone_or_report() {
     local name="$1"
     local repo="$2"
@@ -31,12 +56,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] zsh
-
-Clone oh-my-zsh and the optional custom directory repository.
-HELP
 }

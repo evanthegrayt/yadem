@@ -1,3 +1,31 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] repos
+
+Clone configured git repositories into YADEM_REPO_DIR.
+
+Configuration:
+  YADEM_REPO_DIR             Directory where repositories are cloned
+  YADEM_REPOS                Bash array of repository URLs
+  YADEM_REPO_AUTO_RUN_BUILD  Run rake/make after cloning when set to true
+
+Each repository is cloned into YADEM_REPO_DIR using the repository basename. If
+a configured URL does not end in .git, yadem adds .git for the clone command.
+
+Existing repositories are left alone when YADEM_REPO_DIR/<name>/.git exists.
+
+Build behavior:
+  When YADEM_REPO_AUTO_RUN_BUILD=true, newly cloned repositories run rake if
+  they have a Rakefile and make if they have a Makefile.
+
+Dry-run:
+  yadem --test repos
+
+Dry-run lists clone destinations without creating directories or running
+builds.
+HELP
+}
+
 repo_name_for() {
     local repo="$1"
 
@@ -65,15 +93,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] repos
-
-Clone git repositories listed in YADEM_REPOS into YADEM_REPO_DIR.
-
-Set YADEM_REPO_AUTO_RUN_BUILD=true to run rake/make after cloning repositories
-that include a Rakefile or Makefile.
-HELP
 }

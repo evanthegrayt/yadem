@@ -1,3 +1,30 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] vim [OPTIONS]
+
+Clone YADEM_VIM_REPO into ~/.vim.
+
+Options:
+  -f, --force  Back up or replace an existing ~/.vim before cloning
+
+Configuration:
+  YADEM_VIM_REPO  Repository cloned recursively into ~/.vim
+
+Existing paths:
+  Without --force, an existing ~/.vim path is left alone.
+  With --force, an existing symlink is removed.
+  With --force, an existing file or directory is moved to:
+    $INSTALL_CACHE_DIR/vim.<YYYY-MM-DD>
+
+Dry-run:
+  yadem --test vim
+  yadem --test vim --force
+
+Dry-run reports backup, replacement, and clone decisions without modifying
+files.
+HELP
+}
+
 accepted_arguments() {
     printf "%s\n" "[OPTIONS]"
 }
@@ -94,15 +121,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install "$@"
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] vim
-
-Clone YADEM_VIM_REPO into ~/.vim.
-
-Options:
-  -f, --force  Back up or replace an existing ~/.vim before cloning.
-HELP
 }

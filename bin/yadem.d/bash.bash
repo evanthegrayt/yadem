@@ -1,3 +1,28 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] bash
+
+Clone Bash shell framework repositories into your home directory.
+
+This target touches:
+  $HOME/.bash_it
+  $HOME/.bash_it/custom
+
+Configuration:
+  YADEM_BASH_REPO         Repository cloned to ~/.bash_it
+  YADEM_BASH_CUSTOM_REPO  Optional repository cloned to ~/.bash_it/custom
+
+Existing directories are left alone. This target does not update or replace an
+existing clone.
+
+Dry-run:
+  yadem --test bash
+
+Dry-run reports which repositories would be cloned without creating
+directories.
+HELP
+}
+
 clone_or_report() {
     local name="$1"
     local repo="$2"
@@ -31,12 +56,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] bash
-
-Clone bash-it and the optional custom directory repository.
-HELP
 }

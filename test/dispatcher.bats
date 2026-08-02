@@ -1,4 +1,5 @@
 #!/usr/bin/env bats
+# shellcheck disable=SC2030,SC2031
 
 load test_helper
 
@@ -34,6 +35,8 @@ setup() {
     assert_output_contains "-t, --test"
     assert_output_contains "-a, --all"
     assert_output_contains "-l, --list"
+    assert_output_contains "-e, --edit"
+    assert_output_contains "YADEM_EDITOR"
     assert_output_contains "Run one target per invocation"
     assert_output_contains "dotfiles [OPTIONS] [FILE]"
     assert_output_contains "dotfiles-uninstall [OPTIONS] [FILE]"
@@ -49,12 +52,75 @@ setup() {
     assert_output_contains "Existing symlinks are replaced"
 }
 
+@test "--edit opens a target with configured YADEM_EDITOR first" {
+    local configured_editor="$BATS_TEST_TMPDIR/configured-editor.$BATS_TEST_NUMBER"
+    local visual_editor="$BATS_TEST_TMPDIR/visual-editor.$BATS_TEST_NUMBER"
+    local editor_editor="$BATS_TEST_TMPDIR/editor-editor.$BATS_TEST_NUMBER"
+
+    make_fake_editor "$configured_editor" configured
+    make_fake_editor "$visual_editor" visual
+    make_fake_editor "$editor_editor" editor
+    write_yadem_config "YADEM_EDITOR=\"$configured_editor\""
+    export VISUAL="$visual_editor"
+    export EDITOR="$editor_editor"
+
+    run_yadem --edit dotfiles
+
+    assert_success
+    [[ "$output" == "configured:$(repo_root)/bin/yadem.d/dotfiles.bash" ]]
+}
+
+@test "--edit falls back to VISUAL then EDITOR then vi" {
+    local visual_editor="$BATS_TEST_TMPDIR/visual-editor.$BATS_TEST_NUMBER"
+    local editor_editor="$BATS_TEST_TMPDIR/editor-editor.$BATS_TEST_NUMBER"
+    local fake_bin="$BATS_TEST_TMPDIR/fake-bin.$BATS_TEST_NUMBER"
+
+    make_fake_editor "$visual_editor" visual
+    make_fake_editor "$editor_editor" editor
+    mkdir -p "$fake_bin"
+    make_fake_editor "$fake_bin/vi" vi
+
+    export VISUAL="$visual_editor"
+    export EDITOR="$editor_editor"
+    run_yadem --edit brew
+
+    assert_success
+    [[ "$output" == "visual:$(repo_root)/bin/yadem.d/brew.bash" ]]
+
+    export VISUAL=""
+    export EDITOR="$editor_editor"
+    run_yadem --edit brew
+
+    assert_success
+    [[ "$output" == "editor:$(repo_root)/bin/yadem.d/brew.bash" ]]
+
+    export VISUAL=""
+    export EDITOR=""
+    PATH="$fake_bin:$PATH" run_yadem --edit brew
+
+    assert_success
+    [[ "$output" == "vi:$(repo_root)/bin/yadem.d/brew.bash" ]]
+}
+
+@test "--edit validates target shape before opening an editor" {
+    local editor_path="$BATS_TEST_TMPDIR/editor.$BATS_TEST_NUMBER"
+
+    make_fake_editor "$editor_path" editor
+    export VISUAL="$editor_path"
+
+    run_yadem --edit nope
+
+    assert_failure
+    assert_output_contains "Unknown install target: nope"
+    assert_output_not_contains "editor:"
+}
+
 @test "built-in targets implement print_help without defining help" {
     local target
 
     for target in "$(repo_root)"/bin/yadem.d/*.bash; do
         [[ -f "$target" ]] || continue
-        grep -E '^print_help\(\) \{' "$target" >/dev/null
+        [[ "$(grep -E -m 1 '^[[:alnum:]_]+\(\) \{' "$target")" == "print_help() {" ]]
         ! grep -E '^help\(\) \{' "$target" >/dev/null
         [[ ! -x "$target" ]]
         [[ "$(head -n 1 "$target")" != "#!"* ]]

@@ -1,3 +1,25 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] shell
+
+Change the login shell to YADEM_LOGIN_SHELL.
+
+Configuration:
+  YADEM_LOGIN_SHELL  Supported values: bash, zsh, csh
+
+This target reads /etc/shells and uses the last executable path ending in the
+configured shell name. If YADEM_LOGIN_SHELL is empty, it skips successfully.
+
+Install behavior:
+  chsh -s <resolved-shell-path>
+
+Dry-run:
+  yadem --test shell
+
+Dry-run reports the resolved shell path without changing the login shell.
+HELP
+}
+
 install() {
     local shell_name
     local shell_path
@@ -37,13 +59,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] shell
-
-Change the login shell to YADEM_LOGIN_SHELL. Supported values:
-  bash, zsh, csh
-HELP
 }

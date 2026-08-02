@@ -59,6 +59,17 @@ SH
     chmod +x "$TEST_FAKE_BIN/git"
 }
 
+make_fake_editor() {
+    local editor_path="$1"
+    local label="$2"
+
+    cat > "$editor_path" <<SH
+#!/usr/bin/env bash
+printf "%s:%s\n" "$label" "\$1"
+SH
+    chmod +x "$editor_path"
+}
+
 write_yadem_config() {
     TEST_YADEM_CONFIG="$BATS_TEST_TMPDIR/yademrc.$BATS_TEST_NUMBER"
     export TEST_YADEM_CONFIG
