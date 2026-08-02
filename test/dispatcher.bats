@@ -70,6 +70,32 @@ setup() {
     [[ "$output" == "configured:$(repo_root)/bin/yadem.d/dotfiles.bash" ]]
 }
 
+@test "YADEM_CONFIG can point to an arbitrary config filename" {
+    local configured_editor="$BATS_TEST_TMPDIR/configured-editor.$BATS_TEST_NUMBER"
+
+    make_fake_editor "$configured_editor" configured
+    write_yadem_config "YADEM_EDITOR=\"$configured_editor\""
+
+    run_yadem --edit dotfiles
+
+    assert_success
+    [[ "${TEST_YADEM_CONFIG##*/}" != *yademrc* ]]
+    [[ "$output" == "configured:$(repo_root)/bin/yadem.d/dotfiles.bash" ]]
+}
+
+@test "user config defaults to HOME yademrc when YADEM_CONFIG is unset" {
+    local configured_editor="$BATS_TEST_TMPDIR/configured-editor.$BATS_TEST_NUMBER"
+
+    make_fake_editor "$configured_editor" configured
+    printf "YADEM_EDITOR=\"%s\"\n" "$configured_editor" > "$TEST_HOME/.yademrc"
+    unset YADEM_CONFIG
+
+    run_yadem --edit dotfiles
+
+    assert_success
+    [[ "$output" == "configured:$(repo_root)/bin/yadem.d/dotfiles.bash" ]]
+}
+
 @test "--edit falls back to VISUAL then EDITOR then vi" {
     local visual_editor="$BATS_TEST_TMPDIR/visual-editor.$BATS_TEST_NUMBER"
     local editor_editor="$BATS_TEST_TMPDIR/editor-editor.$BATS_TEST_NUMBER"

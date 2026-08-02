@@ -17,6 +17,7 @@ setup_install_home() {
     TEST_DOTFILES_DIR="$TEST_DOTFILES_REPO/dotfiles"
     export TEST_HOME TEST_CACHE
     export TEST_DOTFILES_REPO TEST_DOTFILES_DIR
+    unset YADEM_CONFIG
 }
 
 run_yadem() {
@@ -71,7 +72,7 @@ SH
 }
 
 write_yadem_config() {
-    TEST_YADEM_CONFIG="$BATS_TEST_TMPDIR/yademrc.$BATS_TEST_NUMBER"
+    TEST_YADEM_CONFIG="$BATS_TEST_TMPDIR/custom-config.$BATS_TEST_NUMBER"
     export TEST_YADEM_CONFIG
     export YADEM_CONFIG="$TEST_YADEM_CONFIG"
 
