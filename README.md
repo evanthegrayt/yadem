@@ -109,6 +109,9 @@ before running the target.
 Target files should put `print_help()` first. A user opening a target should see
 the contract before the implementation.
 
+For a reusable skeleton, external target directory conventions, and a complete
+example target, see [`docs/targets.md`](docs/targets.md).
+
 ## Shared DSL
 
 Shared target helpers live in `bin/lib/yadem.sh`. Target authors should prefer
@@ -134,7 +137,7 @@ Bash edge case.
 
 Shell API comments use the
 [`shdoc`](https://github.com/reconquest/shdoc) format. Generated API docs should
-be written under `docs/`, which is ignored on `master`.
+be written under `docs/`.
 
 Example:
 
