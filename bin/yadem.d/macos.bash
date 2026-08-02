@@ -1,3 +1,32 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] macos
+
+Apply macOS-specific setup.
+
+This target only runs on Darwin. On other systems, it reports that the target is
+skipped and exits successfully.
+
+Configuration:
+  YADEM_SCREENSHOT_DIR  Screenshot directory written with defaults
+
+Install behavior on macOS:
+  Creates YADEM_SCREENSHOT_DIR when configured.
+  Runs defaults write com.apple.screencapture location <dir>.
+  Restarts SystemUIServer when possible.
+  Opens the Xcode Command Line Tools installer with xcode-select --install.
+
+This target is intentionally not included in the default YADEM_ALL_TARGETS
+sequence.
+
+Dry-run:
+  yadem --test macos
+
+Dry-run reports the screenshot directory and xcode-select command without
+changing system settings.
+HELP
+}
+
 install() {
     load_yadem_config
 
@@ -29,13 +58,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] macos
-
-Apply macOS-specific setup. This target is intentionally not included in the
-default YADEM_ALL_TARGETS sequence.
-HELP
 }

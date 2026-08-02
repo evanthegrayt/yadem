@@ -1,3 +1,46 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] dotfiles [OPTIONS] [FILE]
+
+Symlink files from YADEM_DOTFILES_DIR into \$HOME.
+
+With no FILE, every non-ignored file in YADEM_DOTFILES_DIR is linked into
+\$HOME with a leading dot added. For example, zshrc becomes ~/.zshrc.
+
+Pass one FILE to install a single dotfile. FILE may be written with or without
+the leading dot:
+  yadem dotfiles zshrc
+  yadem dotfiles .zshrc
+
+Options:
+  --include-ignored  Link files listed in YADEM_DOTFILES_IGNORE
+
+Configuration:
+  YADEM_DOTFILES_REPO      Repository cloned when dotfiles are missing
+  YADEM_DOTFILES_REPO_DIR  Local clone destination
+  YADEM_DOTFILES_DIR       Directory containing source dotfiles
+  YADEM_DOTFILES_IGNORE    Source names skipped unless --include-ignored is set
+  YADEM_LOCALIZE_EXISTING  Link supported backups back as ~/.<name>.local
+  YADEM_LOCAL_FILES        Dotfile names eligible for .local preservation
+
+If YADEM_DOTFILES_DIR is missing, this target clones YADEM_DOTFILES_REPO into
+YADEM_DOTFILES_REPO_DIR before linking files.
+
+Existing paths:
+  Existing symlinks are replaced.
+  Existing regular files are moved to $INSTALL_CACHE_DIR/<name>.<YYYY-MM-DD>.
+  Existing directories are skipped.
+
+Dry-run:
+  yadem --test dotfiles
+  yadem --test dotfiles zshrc
+  yadem --test dotfiles --include-ignored README.md
+
+Dry-run reports clone, backup, link, and skip decisions without modifying
+files.
+HELP
+}
+
 accepted_arguments() {
     printf "%s\n" "[OPTIONS] [FILE]"
 }
@@ -178,29 +221,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install "$@"
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] dotfiles [FILE]
-
-Symlink files from YADEM_DOTFILES_DIR into \$HOME.
-
-With no FILE, every non-ignored file is linked. FILE may be passed as name or
-.name, for example zshrc or .zshrc.
-
-Options:
-  --include-ignored  Link files listed in YADEM_DOTFILES_IGNORE.
-
-If YADEM_DOTFILES_DIR is missing, clone YADEM_DOTFILES_REPO into
-YADEM_DOTFILES_REPO_DIR first.
-
-Existing symlinks are replaced. Existing regular files are moved to:
-  $INSTALL_CACHE_DIR/<name>.<YYYY-MM-DD>
-
-Set YADEM_LOCALIZE_EXISTING=true to link supported backups back as
-~/.<name>.local.
-
-Existing directories are skipped.
-HELP
 }

@@ -1,3 +1,25 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] brew
+
+Install Homebrew packages from this repository's Brewfile.
+
+This target reads:
+  $INSTALL_PATH/Brewfile
+
+It requires Homebrew to be installed first. If brew is missing, run:
+  yadem homebrew
+
+Install behavior:
+  brew bundle install --file "$INSTALL_PATH/Brewfile"
+
+Dry-run:
+  yadem --test brew
+
+Dry-run reports the Brewfile path without installing packages.
+HELP
+}
+
 install() {
     local brewfile="$INSTALL_PATH/Brewfile"
     local brew_path
@@ -26,13 +48,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] brew
-
-Install Homebrew packages from:
-  $INSTALL_PATH/Brewfile
-HELP
 }

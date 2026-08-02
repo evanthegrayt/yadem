@@ -13,12 +13,14 @@ readonly LIB_PATH="$SCRIPT_DIR/lib/yadem.sh"
 usage() {
     cat <<USAGE
 USAGE: ${0##*/} [OPTIONS] TARGET [ARGS...]
+       ${0##*/} [OPTIONS] --edit TARGET
        ${0##*/} TARGET --help
 
 Options:
   -t, --test    Show what would happen without installing
   -a, --all     Run the configured target sequence
   -l, --list    List available install targets
+  -e, --edit    Open a target in YADEM_EDITOR, VISUAL, EDITOR, or vi
   -h, --help    Display this help and exit
 
 Run one target per invocation. Use --all for configured target sequences.
@@ -115,10 +117,36 @@ run_target() {
     )
 }
 
+edit_target() {
+    local target="$1"
+    local target_path
+    local editor
+    local -a editor_command
+
+    if ! target_exists "$target"; then
+        report_unknown_target "$target"
+        return 1
+    fi
+
+    load_yadem_config
+    target_path="$(target_path_for "$target")"
+    # YADEM_EDITOR is loaded in this shell by load_yadem_config.
+    # shellcheck disable=SC2031
+    editor="${YADEM_EDITOR:-${VISUAL:-${EDITOR:-vi}}}"
+    read -r -a editor_command <<< "$editor"
+
+    if ((${#editor_command[@]} == 0)); then
+        editor_command=(vi)
+    fi
+
+    exec "${editor_command[@]}" "$target_path"
+}
+
 dry_run=false
 list=false
 target_help=false
 all=false
+edit=false
 target=""
 target_args=()
 
@@ -158,6 +186,9 @@ while (($#)); do
         -l|--list)
             list=true
             ;;
+        -e|--edit)
+            edit=true
+            ;;
         -h|--help)
             usage
             exit
@@ -185,6 +216,42 @@ while (($#)); do
     esac
     shift
 done
+
+if [[ "$edit" == true ]]; then
+    if [[ "$all" == true ]]; then
+        echo "--edit cannot be combined with --all." >&2
+        exit 1
+    fi
+
+    if [[ "$list" == true ]]; then
+        echo "--edit cannot be combined with --list." >&2
+        exit 1
+    fi
+
+    if [[ "$dry_run" == true ]]; then
+        echo "--edit cannot be combined with --test." >&2
+        exit 1
+    fi
+
+    if [[ "$target_help" == true ]]; then
+        echo "--edit cannot be combined with target help." >&2
+        exit 1
+    fi
+
+    if [[ -z "$target" ]]; then
+        echo "Must pass an install target to --edit." >&2
+        usage >&2
+        exit 1
+    fi
+
+    if ((${#target_args[@]})); then
+        echo "--edit cannot be combined with target arguments." >&2
+        exit 1
+    fi
+
+    edit_target "$target"
+    exit
+fi
 
 if [[ "$list" == true ]]; then
     list_targets

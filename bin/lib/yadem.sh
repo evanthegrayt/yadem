@@ -47,6 +47,7 @@ load_yadem_config() {
     YADEM_BASH_CUSTOM_REPO="${YADEM_BASH_CUSTOM_REPO:-https://github.com/evanthegrayt/bash-it-custom.git}"
     YADEM_SCREENSHOT_DIR="${YADEM_SCREENSHOT_DIR:-$HOME/Pictures/Screenshots}"
     YADEM_LOGIN_SHELL="${YADEM_LOGIN_SHELL:-}"
+    YADEM_EDITOR="${YADEM_EDITOR:-}"
     YADEM_REPO_AUTO_RUN_BUILD="${YADEM_REPO_AUTO_RUN_BUILD:-false}"
     YADEM_LOCALIZE_EXISTING="${YADEM_LOCALIZE_EXISTING:-false}"
 

@@ -1,3 +1,27 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] italics
+
+Enable terminal italics by compiling xterm-256color.terminfo.
+
+This target reads:
+  YADEM_DOTFILES_DIR/xterm-256color.terminfo
+
+If YADEM_DOTFILES_DIR is missing, it uses YADEM_DOTFILES_REPO and
+YADEM_DOTFILES_REPO_DIR the same way the dotfiles target does.
+
+Install behavior:
+  tic "\$YADEM_DOTFILES_DIR/xterm-256color.terminfo"
+
+Non-dry-run installs require the tic command.
+
+Dry-run:
+  yadem --test italics
+
+Dry-run reports the dotfiles clone if needed and the tic command that would run.
+HELP
+}
+
 install() {
     local terminfo
     local source_status=0
@@ -32,15 +56,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] italics
-
-Compile xterm-256color.terminfo from YADEM_DOTFILES_DIR.
-
-If YADEM_DOTFILES_DIR is missing, clone YADEM_DOTFILES_REPO into
-YADEM_DOTFILES_REPO_DIR first.
-HELP
 }

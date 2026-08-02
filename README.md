@@ -65,6 +65,16 @@ Show target-specific help:
 bin/yadem dotfiles --help
 ```
 
+Open a target in your editor:
+
+```sh
+bin/yadem --edit dotfiles
+bin/yadem -e brew
+```
+
+Editor resolution checks `YADEM_EDITOR` first, then `VISUAL`, then `EDITOR`,
+and falls back to `vi`.
+
 ## Target Contract
 
 Each `*.bash` file in `bin/yadem.d/` is a target module. Targets are referenced
@@ -127,6 +137,7 @@ Notable settings:
 - `YADEM_DOTFILES_REPO`: git repository cloned when dotfiles are missing
 - `YADEM_DOTFILES_REPO_DIR`: local clone destination for `YADEM_DOTFILES_REPO`
 - `YADEM_DOTFILES_IGNORE`: dotfile source names to skip unless explicitly included
+- `YADEM_EDITOR`: editor command used by `bin/yadem --edit <target>`
 - `YADEM_LOCALIZE_EXISTING`: link supported backups back as `~/.name.local`
 - `YADEM_LOCAL_FILES`: dotfiles eligible for `.local` preservation
 - `YADEM_VIM_REPO`: git repository cloned by the `vim` target

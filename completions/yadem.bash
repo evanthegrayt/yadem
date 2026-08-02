@@ -6,7 +6,7 @@ _yadem_completion() {
     local target_dir
     local target
     local targets=()
-    local options="-h --help -a --all -l --list -t --test"
+    local options="-h --help -a --all -l --list -t --test -e --edit"
 
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"

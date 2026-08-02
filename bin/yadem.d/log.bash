@@ -1,3 +1,27 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] log SUBCOMMAND
+
+Inspect or remove the current yadem log file.
+
+The log path defaults to:
+  $INSTALL_LOG
+
+Set YADEM_LOG to choose a different log file.
+
+Subcommands:
+  path    Print the resolved log path, even if the file does not exist
+  list    Print the log path only if the log exists
+  show    Print the log contents
+  delete  Delete the log file
+
+Dry-run:
+  yadem --test log delete
+
+Dry-run only affects delete. It reports the file that would be removed.
+HELP
+}
+
 accepted_arguments() {
     printf "%s\n" "SUBCOMMAND"
 }
@@ -84,18 +108,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install "$@"
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] log SUBCOMMAND
-
-Inspect or remove the current YADEM log file.
-
-Subcommands:
-  path      Print the resolved log path
-  list      Print the log path if the log exists
-  show      Print the log contents
-  delete    Delete the log file
-HELP
 }

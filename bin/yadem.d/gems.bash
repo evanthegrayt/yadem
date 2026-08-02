@@ -1,3 +1,25 @@
+print_help() {
+    cat <<HELP
+USAGE: yadem [OPTIONS] gems
+
+Install Ruby gems listed in YADEM_GEMS.
+
+Configuration:
+  YADEM_GEMS  Bash array of gem names to install
+
+Install behavior:
+  gem install <name>
+
+If YADEM_GEMS is empty, this target exits successfully after saying no gems are
+configured. Non-dry-run installs require the gem command.
+
+Dry-run:
+  yadem --test gems
+
+Dry-run lists each configured gem without installing anything.
+HELP
+}
+
 install() {
     local ruby_gem
 
@@ -27,12 +49,4 @@ install() {
 dry_run() {
     DRY_RUN=true
     install
-}
-
-print_help() {
-    cat <<HELP
-USAGE: yadem [OPTIONS] gems
-
-Install Ruby gems listed in YADEM_GEMS.
-HELP
 }
