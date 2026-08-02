@@ -14,6 +14,7 @@ setup() {
     assert_output_contains "all"
     assert_output_contains "bash"
     assert_output_contains "brew"
+    assert_output_contains "doctor"
     assert_output_contains "dotfiles"
     assert_output_contains "dotfiles-uninstall"
     assert_output_contains "gems"

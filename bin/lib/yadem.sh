@@ -135,6 +135,42 @@ list_targets_verbose() {
     done < <(yadem_target_dirs)
 }
 
+# @description Prints the repository default config path.
+# @noargs
+# @stdout Absolute path to the bundled yadem config.
+# @exitcode 0 Always.
+yadem_default_config_path() {
+    printf "%s\n" "$INSTALL_PATH/config/yademrc"
+}
+
+# @description Prints the configured user config path.
+# @noargs
+# @stdout Absolute or configured path to the user yadem config.
+# @exitcode 0 Always.
+yadem_user_config_path() {
+    printf "%s\n" "${YADEM_CONFIG:-$HOME/.yademrc}"
+}
+
+# @description Lists config files that load_yadem_config would source.
+# @noargs
+# @stdout One active config path per line.
+# @exitcode 0 Always.
+yadem_active_config_paths() {
+    local default_config
+    local user_config
+
+    default_config="$(yadem_default_config_path)"
+    user_config="$(yadem_user_config_path)"
+
+    if [[ -f "$default_config" ]]; then
+        printf "%s\n" "$default_config"
+    fi
+
+    if [[ -f "$user_config" && "$user_config" != "$default_config" ]]; then
+        printf "%s\n" "$user_config"
+    fi
+}
+
 # @description Loads repository defaults and user configuration into YADEM_* variables.
 # @noargs
 # @set YADEM_REPO_DIR string Directory used by repository-oriented targets.
@@ -143,9 +179,12 @@ list_targets_verbose() {
 # @set YADEM_REPOS array Git repositories used by the `repos` target.
 # @exitcode 0 Configuration was loaded.
 load_yadem_config() {
-    local default_config="$INSTALL_PATH/config/yademrc"
-    local user_config="${YADEM_CONFIG:-$HOME/.yademrc}"
+    local default_config
+    local user_config
     local default_git_key_label
+
+    default_config="$(yadem_default_config_path)"
+    user_config="$(yadem_user_config_path)"
 
     if [[ -f "$default_config" ]]; then
         # Source configs so array assignments and exported variables affect this shell.
