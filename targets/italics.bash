@@ -34,10 +34,10 @@ install() {
     local terminfo
     local source_status=0
 
-    load_yadem_config
+    yadem_load_config
     terminfo="$YADEM_DOTFILES_DIR/xterm-256color.terminfo"
 
-    if ensure_dotfiles_source; then
+    if yadem_ensure_dotfiles_source; then
         :
     else
         source_status=$?
@@ -47,17 +47,17 @@ install() {
     fi
 
     if [[ ! -f "$terminfo" && "$source_status" -ne 2 ]]; then
-        say_and_log missing-terminfo "Terminfo file not found: $terminfo"
+        yadem_say_and_log missing-terminfo "Terminfo file not found: $terminfo"
         return 1
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-run "Would run tic $terminfo"
+        yadem_say_and_log would-run "Would run tic $terminfo"
         return
     fi
 
-    require_command tic || return
-    say_and_log enabling "Enabling terminal italics from $terminfo"
+    yadem_require_command tic || return
+    yadem_say_and_log enabling "Enabling terminal italics from $terminfo"
     tic "$terminfo"
 }
 

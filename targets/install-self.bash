@@ -63,9 +63,9 @@ install_self_report_path_status() {
     local directory="$1"
 
     if install_self_path_contains_dir "$directory"; then
-        say "PATH contains $directory"
+        yadem_say "PATH contains $directory"
     else
-        say "PATH does not contain $directory"
+        yadem_say "PATH does not contain $directory"
     fi
 }
 
@@ -104,18 +104,18 @@ install() {
     local destination
     local resolved_destination
 
-    load_yadem_config
+    yadem_load_config
 
     path_dir="$(install_self_path_dir)"
     destination="$path_dir/yadem"
 
     if [[ ! -f "$source" ]]; then
-        say_and_log missing-source "yadem executable not found: $source"
+        yadem_say_and_log missing-source "yadem executable not found: $source"
         return 1
     fi
 
     if [[ "$destination" == "$source" ]]; then
-        say_and_log present "yadem already available at $destination"
+        yadem_say_and_log present "yadem already available at $destination"
         install_self_report_path_status "$path_dir"
         return
     fi
@@ -123,21 +123,21 @@ install() {
     if [[ -L "$destination" ]]; then
         resolved_destination="$(install_self_resolve_path "$destination")" || resolved_destination=""
         if [[ "$resolved_destination" == "$source" ]]; then
-            say_and_log present "yadem symlink already present: $destination -> $source"
+            yadem_say_and_log present "yadem symlink already present: $destination -> $source"
             install_self_report_path_status "$path_dir"
             return
         fi
     elif [[ -e "$destination" ]]; then
-        say_and_log blocked-existing "Refusing to replace existing non-yadem path: $destination"
+        yadem_say_and_log blocked-existing "Refusing to replace existing non-yadem path: $destination"
         install_self_report_path_status "$path_dir"
         return 1
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
         if [[ ! -d "$path_dir" ]]; then
-            say_and_log would-create-dir "Would create directory: $path_dir"
+            yadem_say_and_log would-create-dir "Would create directory: $path_dir"
         fi
-        say_and_log would-link "Would link $destination -> $source"
+        yadem_say_and_log would-link "Would link $destination -> $source"
         install_self_report_path_status "$path_dir"
         return
     fi
@@ -147,10 +147,10 @@ install() {
     if [[ -L "$destination" ]]; then
         rm -- "$destination"
         ln -s "$source" "$destination"
-        say_and_log updated-link "Updated yadem symlink: $destination -> $source"
+        yadem_say_and_log updated-link "Updated yadem symlink: $destination -> $source"
     else
         ln -s "$source" "$destination"
-        say_and_log linked "Linked yadem: $destination -> $source"
+        yadem_say_and_log linked "Linked yadem: $destination -> $source"
     fi
 
     install_self_report_path_status "$path_dir"

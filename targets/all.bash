@@ -31,7 +31,7 @@ install() {
     local target
     local args=()
 
-    load_yadem_config
+    yadem_load_config
 
     if [[ "$DRY_RUN" == true ]]; then
         args+=(--test)
@@ -39,11 +39,11 @@ install() {
 
     for target in "${YADEM_ALL_TARGETS[@]}"; do
         if [[ "$target" == all ]]; then
-            say_and_log skipped "Skipping recursive all target"
+            yadem_say_and_log skipped "Skipping recursive all target"
             continue
         fi
 
-        say_and_log running-target "Running target: $target"
+        yadem_say_and_log running-target "Running target: $target"
         "$INSTALL_BIN_DIR/yadem" "${args[@]}" "$target"
     done
 }

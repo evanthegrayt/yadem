@@ -65,9 +65,9 @@ dotfile_is_ignored() {
     local include_ignored="$2"
 
     # Let `&&` preserve the predicate status: false include_ignored falls through
-    # to array_contains, while true include_ignored returns 1 ("not ignored").
+    # to yadem_array_contains, while true include_ignored returns 1 ("not ignored").
     [[ "$include_ignored" != true ]] &&
-        array_contains "$filename" "${YADEM_DOTFILES_IGNORE[@]}"
+        yadem_array_contains "$filename" "${YADEM_DOTFILES_IGNORE[@]}"
 }
 
 # @description Links one dotfile source into `$HOME`.
@@ -85,61 +85,61 @@ link_dotfile() {
 
     if [[ -L "$target" ]]; then
         if [[ "$DRY_RUN" == true ]]; then
-            say_and_log would-replace-link "Would replace symlink: $target -> $file"
+            yadem_say_and_log would-replace-link "Would replace symlink: $target -> $file"
         else
             rm -- "$target"
             ln -s "$file" "$target"
-            say_and_log replaced-link "Replaced symlink: $target -> $file"
+            yadem_say_and_log replaced-link "Replaced symlink: $target -> $file"
         fi
         return
     fi
 
     if [[ -e "$target" ]]; then
         if [[ -d "$target" ]]; then
-            say_and_log skipped-directory "Skipped existing directory: $target"
+            yadem_say_and_log skipped-directory "Skipped existing directory: $target"
             return
         fi
 
         if [[ -f "$target" ]]; then
             # Existing regular files are user data, so move them aside before
             # creating the managed symlink.
-            backup="$(backup_path_for "$target")"
+            backup="$(yadem_backup_path_for "$target")"
             local_target="$HOME/.$filename.local"
 
             if [[ "$DRY_RUN" == true ]]; then
-                say_and_log would-back-up "Would back up $target to $backup"
+                yadem_say_and_log would-back-up "Would back up $target to $backup"
                 if [[ "$YADEM_DOTFILES_LOCALIZE_EXISTING" == true ]] &&
-                    array_contains "$filename" "${YADEM_DOTFILES_LOCAL_FILES[@]}" &&
+                    yadem_array_contains "$filename" "${YADEM_DOTFILES_LOCAL_FILES[@]}" &&
                     [[ ! -e "$local_target" && ! -L "$local_target" ]]; then
-                    say_and_log would-link-local "Would link $local_target -> $backup"
+                    yadem_say_and_log would-link-local "Would link $local_target -> $backup"
                 fi
-                say_and_log would-link "Would link $target -> $file"
+                yadem_say_and_log would-link "Would link $target -> $file"
             else
                 yadem_ensure_dir "$INSTALL_CACHE_DIR" || return
                 mv -- "$target" "$backup"
                 if [[ "$YADEM_DOTFILES_LOCALIZE_EXISTING" == true ]] &&
-                    array_contains "$filename" "${YADEM_DOTFILES_LOCAL_FILES[@]}" &&
+                    yadem_array_contains "$filename" "${YADEM_DOTFILES_LOCAL_FILES[@]}" &&
                     [[ ! -e "$local_target" && ! -L "$local_target" ]]; then
                     ln -s "$backup" "$local_target"
-                    say_and_log linked-local "Linked $local_target -> $backup"
+                    yadem_say_and_log linked-local "Linked $local_target -> $backup"
                 fi
                 ln -s "$file" "$target"
-                say_and_log backed-up "Backed up $target to $backup"
-                say_and_log linked "Linked $target -> $file"
+                yadem_say_and_log backed-up "Backed up $target to $backup"
+                yadem_say_and_log linked "Linked $target -> $file"
             fi
 
             return
         fi
 
-        say_and_log skipped-existing "Skipped existing path: $target"
+        yadem_say_and_log skipped-existing "Skipped existing path: $target"
         return
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-link "Would link $target -> $file"
+        yadem_say_and_log would-link "Would link $target -> $file"
     else
         ln -s "$file" "$target"
-        say_and_log linked "Linked $target -> $file"
+        yadem_say_and_log linked "Linked $target -> $file"
     fi
 }
 
@@ -154,12 +154,12 @@ install_dotfile() {
     local file="$YADEM_DOTFILES_DIR/$filename"
 
     if [[ ! -e "$file" && ! -L "$file" ]]; then
-        say_and_log missing-dotfile-source "Dotfile source not found: $file"
+        yadem_say_and_log missing-dotfile-source "Dotfile source not found: $file"
         return 1
     fi
 
     if dotfile_is_ignored "$filename" "$include_ignored"; then
-        say_and_log skipped-ignored "Skipped ignored dotfile: $filename"
+        yadem_say_and_log skipped-ignored "Skipped ignored dotfile: $filename"
         return
     fi
 
@@ -182,7 +182,7 @@ install_all_dotfiles() {
         filename="${file##*/}"
 
         if dotfile_is_ignored "$filename" "$include_ignored"; then
-            say_and_log skipped-ignored "Skipped ignored dotfile: $filename"
+            yadem_say_and_log skipped-ignored "Skipped ignored dotfile: $filename"
             continue
         fi
 
@@ -200,7 +200,7 @@ install() {
     local filename
     local source_status
 
-    load_yadem_config
+    yadem_load_config
 
     while (($#)); do
         case "$1" in
@@ -212,12 +212,12 @@ install() {
                 include_ignored=true
                 ;;
             -*)
-                say_and_log invalid-option "Invalid option for dotfiles: $1"
+                yadem_say_and_log invalid-option "Invalid option for dotfiles: $1"
                 return 1
                 ;;
             *)
                 if [[ -n "$single_file" ]]; then
-                    say_and_log too-many-files "Only one dotfile can be installed at a time"
+                    yadem_say_and_log too-many-files "Only one dotfile can be installed at a time"
                     return 1
                 fi
                 single_file="$1"
@@ -226,13 +226,13 @@ install() {
         shift
     done
 
-    if ensure_dotfiles_source; then
+    if yadem_ensure_dotfiles_source; then
         :
     else
         source_status=$?
-        # ensure_dotfiles_source returns 2 only for dry-run "would clone".
+        # yadem_ensure_dotfiles_source returns 2 only for dry-run "would clone".
         if [[ "$source_status" -eq 2 ]]; then
-            say "Dry run complete. $(log_status_message)"
+            yadem_say "Dry run complete. $(yadem_log_status_message)"
             return
         fi
 
@@ -240,8 +240,8 @@ install() {
     fi
 
     if [[ -n "$single_file" ]]; then
-        if ! filename="$(dotfile_name_for "$single_file")"; then
-            say_and_log invalid-dotfile "Invalid dotfile name: $single_file"
+        if ! filename="$(yadem_dotfile_name_for "$single_file")"; then
+            yadem_say_and_log invalid-dotfile "Invalid dotfile name: $single_file"
             return 1
         fi
         install_dotfile "$filename" "$include_ignored" || return
@@ -250,9 +250,9 @@ install() {
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say "Dry run complete. $(log_status_message)"
+        yadem_say "Dry run complete. $(yadem_log_status_message)"
     else
-        say "Done. $(log_status_message)"
+        yadem_say "Done. $(yadem_log_status_message)"
     fi
 }
 

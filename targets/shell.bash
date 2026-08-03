@@ -32,18 +32,18 @@ install() {
     local shell_name
     local shell_path
 
-    load_yadem_config
+    yadem_load_config
     shell_name="$YADEM_SHELL_LOGIN"
 
     if [[ -z "$shell_name" ]]; then
-        say_and_log skipped "YADEM_SHELL_LOGIN is not configured"
+        yadem_say_and_log skipped "YADEM_SHELL_LOGIN is not configured"
         return
     fi
 
     case "$shell_name" in
         bash|zsh|csh) ;;
         *)
-            say_and_log invalid-shell "Unsupported shell: $shell_name"
+            yadem_say_and_log invalid-shell "Unsupported shell: $shell_name"
             return 1
             ;;
     esac
@@ -51,16 +51,16 @@ install() {
     shell_path="$(grep "/$shell_name$" /etc/shells 2>/dev/null | tail -n 1 || true)"
 
     if [[ -z "$shell_path" || ! -x "$shell_path" ]]; then
-        say_and_log missing-shell "Login shell not found in /etc/shells: $shell_name"
+        yadem_say_and_log missing-shell "Login shell not found in /etc/shells: $shell_name"
         return 1
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-change "Would change login shell to $shell_path"
+        yadem_say_and_log would-change "Would change login shell to $shell_path"
         return
     fi
 
-    say_and_log changing "Changing login shell to $shell_path"
+    yadem_say_and_log changing "Changing login shell to $shell_path"
     chsh -s "$shell_path"
 }
 

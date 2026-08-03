@@ -90,8 +90,8 @@ target_argument_usage() {
     local target="$1"
     local target_path
 
-    target_exists "$target" || return 1
-    target_path="$(target_path_for "$target")"
+    yadem_target_exists "$target" || return 1
+    target_path="$(yadem_target_path_for "$target")"
 
     # Source target metadata in a subshell so helper functions or variables from
     # one target cannot leak into global help generation for the next target.
@@ -122,9 +122,9 @@ list_target_usages() {
         else
             printf "%s\n" "$target"
         fi
-    # Process substitution feeds list_targets into the loop without a pipeline
+    # Process substitution feeds yadem_list_targets into the loop without a pipeline
     # subshell, so variables assigned in the loop would remain available here.
-    done < <(list_targets)
+    done < <(yadem_list_targets)
 }
 
 # @description Loads a target and invokes one command function inside an isolated subshell.
@@ -140,12 +140,12 @@ run_target() {
     local target_path
     shift 2
 
-    if ! target_exists "$target"; then
+    if ! yadem_target_exists "$target"; then
         report_unknown_target "$target"
         return 1
     fi
 
-    target_path="$(target_path_for "$target")"
+    target_path="$(yadem_target_path_for "$target")"
 
     # Run every target in a subshell so sourced target functions, target-local
     # globals, and DRY_RUN/INSTALL_TARGET changes do not leak into the dispatcher.
@@ -182,14 +182,14 @@ edit_target() {
     local editor
     local -a editor_command
 
-    if ! target_exists "$target"; then
+    if ! yadem_target_exists "$target"; then
         report_unknown_target "$target"
         return 1
     fi
 
-    load_yadem_config
-    target_path="$(target_path_for "$target")"
-    # YADEM_EDITOR is loaded in this shell by load_yadem_config.
+    yadem_load_config
+    target_path="$(yadem_target_path_for "$target")"
+    # YADEM_EDITOR is loaded in this shell by yadem_load_config.
     # shellcheck disable=SC2031
     editor="${YADEM_EDITOR:-${VISUAL:-${EDITOR:-vi}}}"
     # This intentionally supports simple editor commands like "vim -p"; it is
@@ -325,11 +325,11 @@ fi
 
 if [[ "$list" == true ]]; then
     if [[ "$verbose" == true ]]; then
-        list_targets_verbose
+        yadem_list_targets_verbose
         exit
     fi
 
-    list_targets
+    yadem_list_targets
     exit
 fi
 
@@ -363,7 +363,7 @@ if [[ -z "$target" ]]; then
     exit 1
 fi
 
-if ! target_exists "$target"; then
+if ! yadem_target_exists "$target"; then
     report_unknown_target "$target"
     exit 1
 fi

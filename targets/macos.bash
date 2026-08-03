@@ -36,30 +36,30 @@ HELP
 # @exitcode 0 Setup completed, was skipped, or dry-run reported it.
 # @exitcode 1 A macOS command failed.
 install() {
-    load_yadem_config
+    yadem_load_config
 
     if [[ "$(uname -s)" != Darwin ]]; then
-        say_and_log skipped "macos target only runs on Darwin"
+        yadem_say_and_log skipped "macos target only runs on Darwin"
         return
     fi
 
     if [[ -n "$YADEM_SCREENSHOT_DIR" ]]; then
         if [[ "$DRY_RUN" == true ]]; then
-            say_and_log would-configure "Would set screenshot directory to $YADEM_SCREENSHOT_DIR"
+            yadem_say_and_log would-configure "Would set screenshot directory to $YADEM_SCREENSHOT_DIR"
         else
             mkdir -p "$YADEM_SCREENSHOT_DIR"
             defaults write com.apple.screencapture location "$YADEM_SCREENSHOT_DIR"
             killall SystemUIServer >/dev/null 2>&1 || true
-            say_and_log configured "Set screenshot directory to $YADEM_SCREENSHOT_DIR"
+            yadem_say_and_log configured "Set screenshot directory to $YADEM_SCREENSHOT_DIR"
         fi
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-run "Would run xcode-select --install"
+        yadem_say_and_log would-run "Would run xcode-select --install"
         return
     fi
 
-    say_and_log installing "Opening Xcode Command Line Tools installer"
+    yadem_say_and_log installing "Opening Xcode Command Line Tools installer"
     xcode-select --install
 }
 

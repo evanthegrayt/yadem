@@ -79,42 +79,42 @@ prepare_ssh_key() {
     public_key_path="$(ssh_public_key_path_for "$key_path")"
 
     if [[ "$YADEM_GIT_SSH_ENABLED" != true ]]; then
-        say_and_log skipped "SSH key setup is disabled"
+        yadem_say_and_log skipped "SSH key setup is disabled"
         return
     fi
 
     if [[ -f "$key_path" && -f "$public_key_path" ]]; then
-        say_and_log present "SSH key already exists: $key_path"
+        yadem_say_and_log present "SSH key already exists: $key_path"
         return
     fi
 
     if [[ -f "$key_path" && ! -f "$public_key_path" ]]; then
         if [[ "$DRY_RUN" == true ]]; then
-            say_and_log would-derive-public-key "Would derive SSH public key: $public_key_path"
+            yadem_say_and_log would-derive-public-key "Would derive SSH public key: $public_key_path"
             return
         fi
 
-        require_command ssh-keygen || return
+        yadem_require_command ssh-keygen || return
         ssh-keygen -y -f "$key_path" > "$public_key_path"
-        say_and_log derived-public-key "Derived SSH public key: $public_key_path"
+        yadem_say_and_log derived-public-key "Derived SSH public key: $public_key_path"
         return
     fi
 
     if [[ ! -f "$key_path" && -f "$public_key_path" ]]; then
-        say_and_log present "SSH public key exists without private key: $public_key_path"
+        yadem_say_and_log present "SSH public key exists without private key: $public_key_path"
         return
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-generate "Would generate SSH key: $key_path"
-        say_and_log would-run "Would run ssh-keygen with type $YADEM_GIT_SSH_KEY_TYPE and options: $(ssh_keygen_options_summary)"
+        yadem_say_and_log would-generate "Would generate SSH key: $key_path"
+        yadem_say_and_log would-run "Would run ssh-keygen with type $YADEM_GIT_SSH_KEY_TYPE and options: $(ssh_keygen_options_summary)"
         return
     fi
 
-    require_command ssh-keygen || return
+    yadem_require_command ssh-keygen || return
     yadem_ensure_dir "$(dirname -- "$key_path")" || return
     chmod 700 "$(dirname -- "$key_path")" 2>/dev/null || true
-    say_and_log generating "Generating SSH key: $key_path"
+    yadem_say_and_log generating "Generating SSH key: $key_path"
     ssh-keygen \
         -t "$YADEM_GIT_SSH_KEY_TYPE" \
         -C "$YADEM_GIT_SSH_COMMENT" \
@@ -122,7 +122,7 @@ prepare_ssh_key() {
         "${YADEM_GIT_SSH_KEYGEN_OPTIONS[@]}"
 
     if [[ ! -f "$key_path" || ! -f "$public_key_path" ]]; then
-        say_and_log missing-generated-key "ssh-keygen did not create expected key pair: $key_path"
+        yadem_say_and_log missing-generated-key "ssh-keygen did not create expected key pair: $key_path"
         return 1
     fi
 
@@ -140,13 +140,13 @@ print_ssh_public_key() {
 
     public_key_path="$(ssh_public_key_path_for "$YADEM_GIT_SSH_KEY_PATH")"
     if [[ ! -f "$public_key_path" ]]; then
-        say_and_log missing-public-key "SSH public key not found: $public_key_path"
+        yadem_say_and_log missing-public-key "SSH public key not found: $public_key_path"
         return 1
     fi
 
-    say "SSH public key ($public_key_path):"
+    yadem_say "SSH public key ($public_key_path):"
     cat "$public_key_path"
-    log_event printed-public-key "Printed SSH public key: $public_key_path"
+    yadem_log_event printed-public-key "Printed SSH public key: $public_key_path"
 }
 
 # @description Builds a GitLab user settings URL.
@@ -169,22 +169,22 @@ print_manual_links() {
     case "$account" in
         github)
             if [[ "$YADEM_GIT_SSH_ENABLED" == true ]]; then
-                say_and_log manual-link "Add GitHub SSH key: https://github.com/settings/ssh/new"
+                yadem_say_and_log manual-link "Add GitHub SSH key: https://github.com/settings/ssh/new"
             fi
             if [[ "$YADEM_GPG_ENABLED" == true ]]; then
-                say_and_log manual-link "Add GitHub GPG key: https://github.com/settings/gpg/new"
+                yadem_say_and_log manual-link "Add GitHub GPG key: https://github.com/settings/gpg/new"
             fi
             ;;
         gitlab)
             if [[ "$YADEM_GIT_SSH_ENABLED" == true ]]; then
-                say_and_log manual-link "Add GitLab SSH key: $(gitlab_settings_url ssh_keys)"
+                yadem_say_and_log manual-link "Add GitLab SSH key: $(gitlab_settings_url ssh_keys)"
             fi
             if [[ "$YADEM_GPG_ENABLED" == true ]]; then
-                say_and_log manual-link "Add GitLab GPG key: $(gitlab_settings_url gpg_keys)"
+                yadem_say_and_log manual-link "Add GitLab GPG key: $(gitlab_settings_url gpg_keys)"
             fi
             ;;
         *)
-            say_and_log skipped-account "Unsupported git account: $account"
+            yadem_say_and_log skipped-account "Unsupported git account: $account"
             ;;
     esac
 }
@@ -210,22 +210,22 @@ upload_github_ssh_key() {
     public_key_path="$(ssh_public_key_path_for "$YADEM_GIT_SSH_KEY_PATH")"
 
     if [[ "$YADEM_GIT_AUTO_UPLOAD" != true ]]; then
-        say_and_log skipped-upload "GitHub SSH upload skipped: YADEM_GIT_AUTO_UPLOAD is not true"
+        yadem_say_and_log skipped-upload "GitHub SSH upload skipped: YADEM_GIT_AUTO_UPLOAD is not true"
         return
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-upload "Would upload SSH key to GitHub with gh when available and authenticated"
+        yadem_say_and_log would-upload "Would upload SSH key to GitHub with gh when available and authenticated"
         return
     fi
 
     if ! git_account_cli_authenticated gh; then
-        say_and_log skipped-upload "GitHub SSH upload skipped: gh is missing or unauthenticated"
+        yadem_say_and_log skipped-upload "GitHub SSH upload skipped: gh is missing or unauthenticated"
         return
     fi
 
     gh ssh-key add "$public_key_path" --title "$YADEM_GIT_KEY_TITLE" --type authentication
-    say_and_log uploaded "Uploaded SSH key to GitHub: $YADEM_GIT_KEY_TITLE"
+    yadem_say_and_log uploaded "Uploaded SSH key to GitHub: $YADEM_GIT_KEY_TITLE"
 }
 
 # @description Uploads the configured SSH key to GitLab when possible.
@@ -238,22 +238,22 @@ upload_gitlab_ssh_key() {
     public_key_path="$(ssh_public_key_path_for "$YADEM_GIT_SSH_KEY_PATH")"
 
     if [[ "$YADEM_GIT_AUTO_UPLOAD" != true ]]; then
-        say_and_log skipped-upload "GitLab SSH upload skipped: YADEM_GIT_AUTO_UPLOAD is not true"
+        yadem_say_and_log skipped-upload "GitLab SSH upload skipped: YADEM_GIT_AUTO_UPLOAD is not true"
         return
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-upload "Would upload SSH key to GitLab with glab when available and authenticated"
+        yadem_say_and_log would-upload "Would upload SSH key to GitLab with glab when available and authenticated"
         return
     fi
 
     if ! git_account_cli_authenticated glab; then
-        say_and_log skipped-upload "GitLab SSH upload skipped: glab is missing or unauthenticated"
+        yadem_say_and_log skipped-upload "GitLab SSH upload skipped: glab is missing or unauthenticated"
         return
     fi
 
     glab ssh-key add "$public_key_path" -t "$YADEM_GIT_KEY_TITLE" --usage-type auth
-    say_and_log uploaded "Uploaded SSH key to GitLab: $YADEM_GIT_KEY_TITLE"
+    yadem_say_and_log uploaded "Uploaded SSH key to GitLab: $YADEM_GIT_KEY_TITLE"
 }
 
 # @description Exports the configured public GPG key.
@@ -265,19 +265,19 @@ prepare_gpg_public_key() {
     fi
 
     if [[ -z "$YADEM_GPG_KEY_ID" ]]; then
-        say_and_log skipped-gpg "GPG key export skipped: YADEM_GPG_KEY_ID is not configured"
+        yadem_say_and_log skipped-gpg "GPG key export skipped: YADEM_GPG_KEY_ID is not configured"
         return
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-export-gpg "Would export GPG public key for $YADEM_GPG_KEY_ID to $YADEM_GPG_PUBLIC_KEY_PATH"
+        yadem_say_and_log would-export-gpg "Would export GPG public key for $YADEM_GPG_KEY_ID to $YADEM_GPG_PUBLIC_KEY_PATH"
         return
     fi
 
-    require_command gpg || return
+    yadem_require_command gpg || return
     yadem_ensure_dir "$(dirname -- "$YADEM_GPG_PUBLIC_KEY_PATH")" || return
     gpg --armor --export "$YADEM_GPG_KEY_ID" > "$YADEM_GPG_PUBLIC_KEY_PATH"
-    say_and_log exported-gpg "Exported GPG public key: $YADEM_GPG_PUBLIC_KEY_PATH"
+    yadem_say_and_log exported-gpg "Exported GPG public key: $YADEM_GPG_PUBLIC_KEY_PATH"
 }
 
 # @description Prints the configured exported GPG public key.
@@ -288,13 +288,13 @@ print_gpg_public_key() {
     [[ -n "$YADEM_GPG_KEY_ID" ]] || return 0
 
     if [[ ! -f "$YADEM_GPG_PUBLIC_KEY_PATH" ]]; then
-        say_and_log missing-gpg-public-key "GPG public key export not found: $YADEM_GPG_PUBLIC_KEY_PATH"
+        yadem_say_and_log missing-gpg-public-key "GPG public key export not found: $YADEM_GPG_PUBLIC_KEY_PATH"
         return 1
     fi
 
-    say "GPG public key ($YADEM_GPG_PUBLIC_KEY_PATH):"
+    yadem_say "GPG public key ($YADEM_GPG_PUBLIC_KEY_PATH):"
     cat "$YADEM_GPG_PUBLIC_KEY_PATH"
-    log_event printed-gpg-public-key "Printed GPG public key: $YADEM_GPG_PUBLIC_KEY_PATH"
+    yadem_log_event printed-gpg-public-key "Printed GPG public key: $YADEM_GPG_PUBLIC_KEY_PATH"
 }
 
 # @description Uploads the configured GPG key to GitHub when possible.
@@ -304,22 +304,22 @@ upload_github_gpg_key() {
     [[ "$YADEM_GPG_ENABLED" == true && -n "$YADEM_GPG_KEY_ID" ]] || return 0
 
     if [[ "$YADEM_GIT_AUTO_UPLOAD" != true ]]; then
-        say_and_log skipped-upload "GitHub GPG upload skipped: YADEM_GIT_AUTO_UPLOAD is not true"
+        yadem_say_and_log skipped-upload "GitHub GPG upload skipped: YADEM_GIT_AUTO_UPLOAD is not true"
         return
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-upload "Would upload GPG key to GitHub with gh when available and authenticated"
+        yadem_say_and_log would-upload "Would upload GPG key to GitHub with gh when available and authenticated"
         return
     fi
 
     if ! git_account_cli_authenticated gh; then
-        say_and_log skipped-upload "GitHub GPG upload skipped: gh is missing or unauthenticated"
+        yadem_say_and_log skipped-upload "GitHub GPG upload skipped: gh is missing or unauthenticated"
         return
     fi
 
     gh gpg-key add "$YADEM_GPG_PUBLIC_KEY_PATH" --title "$YADEM_GIT_KEY_TITLE"
-    say_and_log uploaded "Uploaded GPG key to GitHub: $YADEM_GIT_KEY_TITLE"
+    yadem_say_and_log uploaded "Uploaded GPG key to GitHub: $YADEM_GIT_KEY_TITLE"
 }
 
 # @description Uploads the configured GPG key to GitLab when possible.
@@ -329,22 +329,22 @@ upload_gitlab_gpg_key() {
     [[ "$YADEM_GPG_ENABLED" == true && -n "$YADEM_GPG_KEY_ID" ]] || return 0
 
     if [[ "$YADEM_GIT_AUTO_UPLOAD" != true ]]; then
-        say_and_log skipped-upload "GitLab GPG upload skipped: YADEM_GIT_AUTO_UPLOAD is not true"
+        yadem_say_and_log skipped-upload "GitLab GPG upload skipped: YADEM_GIT_AUTO_UPLOAD is not true"
         return
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-upload "Would upload GPG key to GitLab with glab when available and authenticated"
+        yadem_say_and_log would-upload "Would upload GPG key to GitLab with glab when available and authenticated"
         return
     fi
 
     if ! git_account_cli_authenticated glab; then
-        say_and_log skipped-upload "GitLab GPG upload skipped: glab is missing or unauthenticated"
+        yadem_say_and_log skipped-upload "GitLab GPG upload skipped: glab is missing or unauthenticated"
         return
     fi
 
     glab gpg-key add "$YADEM_GPG_PUBLIC_KEY_PATH"
-    say_and_log uploaded "Uploaded GPG key to GitLab: $YADEM_GIT_KEY_TITLE"
+    yadem_say_and_log uploaded "Uploaded GPG key to GitLab: $YADEM_GIT_KEY_TITLE"
 }
 
 # @description Handles upload attempts for one configured account.
@@ -364,7 +364,7 @@ handle_account() {
             upload_gitlab_gpg_key || return
             ;;
         *)
-            say_and_log skipped-account "Unsupported git account: $account"
+            yadem_say_and_log skipped-account "Unsupported git account: $account"
             return
             ;;
     esac
@@ -379,7 +379,7 @@ handle_account() {
 install() {
     local account
 
-    load_yadem_config
+    yadem_load_config
 
     prepare_ssh_key || return
     if [[ "$DRY_RUN" != true ]]; then
@@ -396,9 +396,9 @@ install() {
     done
 
     if [[ "$DRY_RUN" == true ]]; then
-        say "Dry run complete. $(log_status_message)"
+        yadem_say "Dry run complete. $(yadem_log_status_message)"
     else
-        say "Done. $(log_status_message)"
+        yadem_say "Done. $(yadem_log_status_message)"
     fi
 }
 

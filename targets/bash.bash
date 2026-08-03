@@ -48,7 +48,7 @@ install() {
     local force=false
     local destination_status
 
-    load_yadem_config
+    yadem_load_config
 
     while (($#)); do
         case "$1" in
@@ -60,11 +60,11 @@ install() {
                 force=true
                 ;;
             -*)
-                say_and_log invalid-option "Invalid option for bash: $1"
+                yadem_say_and_log invalid-option "Invalid option for bash: $1"
                 return 1
                 ;;
             *)
-                say_and_log invalid-argument "Invalid argument for bash: $1"
+                yadem_say_and_log invalid-argument "Invalid argument for bash: $1"
                 return 1
                 ;;
         esac
@@ -88,10 +88,10 @@ install() {
         fi
 
         # After a dry-run force backup, the directory still exists, so report the
-        # clone that would follow instead of letting clone-if-missing say present.
+        # clone that would follow instead of letting clone-if-missing report present.
         if [[ "$DRY_RUN" == true && "$force" == true &&
             ( -e "$HOME/.bash_it/custom" || -L "$HOME/.bash_it/custom" ) ]]; then
-            say_and_log would-clone "Would clone $YADEM_BASH_CUSTOM_REPO to $HOME/.bash_it/custom"
+            yadem_say_and_log would-clone "Would clone $YADEM_BASH_CUSTOM_REPO to $HOME/.bash_it/custom"
         else
             yadem_clone_repo_if_missing bash-it-custom "$YADEM_BASH_CUSTOM_REPO" "$HOME/.bash_it/custom" true
         fi
