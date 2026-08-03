@@ -68,18 +68,18 @@ HELP
 # @exitcode 0 The target is installed or dry-run reported the work.
 # @exitcode 1 A required command, file, or operation failed.
 install() {
-    load_yadem_config
+    yadem_load_config
 
     local example_path="${YADEM_EXAMPLE_PATH:-$HOME/.example}"
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-create "Would create $example_path"
+        yadem_say_and_log would-create "Would create $example_path"
         return
     fi
 
     yadem_ensure_dir "$(dirname -- "$example_path")" || return
     printf "created by yadem\n" > "$example_path"
-    say_and_log created "Created $example_path"
+    yadem_say_and_log created "Created $example_path"
 }
 
 # @description Previews the example target.
@@ -124,7 +124,11 @@ target does before showing implementation details.
 yadem sources `lib/yadem.sh` before it sources the target. The helper file
 sets common variables and exposes a small target DSL.
 
-Use `load_yadem_config` near the start of `install()` when a target reads
+Shared helper names start with `yadem_`. Bare function names are reserved for
+the target contract: `print_help`, `install`, `dry_run`, and
+`accepted_arguments`.
+
+Use `yadem_load_config` near the start of `install()` when a target reads
 `YADEM_*` settings. It loads repository defaults from `config/yademrc`, then
 loads `${YADEM_CONFIG:-$HOME/.yademrc}` when it exists. User config overrides
 repo defaults while unset values still fall back to the default config.
@@ -134,7 +138,7 @@ example `YADEM_NODE_VERSION`, `YADEM_NOTES_DIR`, or
 `YADEM_WORK_NOTES_DIR`. Bundled targets follow names such as
 `YADEM_DOTFILES_*`, `YADEM_VIM_*`, `YADEM_REPOS_*`, and `YADEM_SHELL_*`.
 Document each variable in `print_help()` and give it a safe default in the
-target after `load_yadem_config`.
+target after `yadem_load_config`.
 
 Use `DRY_RUN` to decide whether the target may change the system. The
 dispatcher sets it to `true` for `bin/yadem --test <target>`. Most targets keep
@@ -156,29 +160,29 @@ local marker="$INSTALL_CACHE_DIR/my-target-installed"
 
 `INSTALL_CACHE_DIR` defaults to `${XDG_CACHE_HOME:-$HOME/.cache}/yadem`.
 
-Use `say` for user-facing status that does not need to be logged:
+Use `yadem_say` for user-facing status that does not need to be logged:
 
 ```bash
-say "Nothing to do."
+yadem_say "Nothing to do."
 ```
 
-Use `say_and_log` for install actions, skipped work, dry-run plans, and failure
+Use `yadem_say_and_log` for install actions, skipped work, dry-run plans, and failure
 messages that should appear in the install log:
 
 ```bash
-say_and_log would-install "Would install example-tool"
-say_and_log installed "Installed example-tool"
-say_and_log missing-config "Config file not found: $config_file"
+yadem_say_and_log would-install "Would install example-tool"
+yadem_say_and_log installed "Installed example-tool"
+yadem_say_and_log missing-config "Config file not found: $config_file"
 ```
 
-The first argument to `say_and_log` is a short action key used in the log. The
+The first argument to `yadem_say_and_log` is a short action key used in the log. The
 remaining words are printed to stdout and written to the install log. Logging is
 best-effort and uses `${YADEM_LOG:-$INSTALL_CACHE_DIR/install.log}`.
 
-Use `require_command` before invoking external commands:
+Use `yadem_require_command` before invoking external commands:
 
 ```bash
-require_command git || return
+yadem_require_command git || return
 ```
 
 It prints and logs a clear missing-command message, then returns non-zero.
@@ -205,7 +209,7 @@ is:
 
 ```bash
 if [[ ! -f "$source_file" ]]; then
-    say_and_log missing-source "Source file not found: $source_file"
+    yadem_say_and_log missing-source "Source file not found: $source_file"
     return 1
 fi
 ```
@@ -240,21 +244,21 @@ HELP
 }
 
 install() {
-    load_yadem_config
+    yadem_load_config
 
     local notes_dir="${YADEM_NOTES_DIR:-$HOME/notes}"
     local readme="$notes_dir/README.md"
     local marker="$INSTALL_CACHE_DIR/notes-target.last-run"
 
     if [[ -e "$readme" ]]; then
-        say_and_log present "Notes README already exists: $readme"
+        yadem_say_and_log present "Notes README already exists: $readme"
         return
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-create "Would create $notes_dir"
-        say_and_log would-create "Would create $readme"
-        say "Would record run marker at $marker"
+        yadem_say_and_log would-create "Would create $notes_dir"
+        yadem_say_and_log would-create "Would create $readme"
+        yadem_say "Would record run marker at $marker"
         return
     fi
 
@@ -264,8 +268,8 @@ install() {
     printf "# Notes\n" > "$readme"
     printf "%s\n" "$(date +%Y-%m-%dT%H:%M:%S%z)" > "$marker"
 
-    say_and_log created "Created $readme"
-    say_and_log cached "Recorded run marker at $marker"
+    yadem_say_and_log created "Created $readme"
+    yadem_say_and_log cached "Recorded run marker at $marker"
 }
 
 dry_run() {

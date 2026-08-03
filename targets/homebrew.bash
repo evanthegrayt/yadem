@@ -33,27 +33,27 @@ install() {
 
     install_command="/usr/bin/env bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
-    if brew_path="$(brew_executable)"; then
-        say_and_log present "Homebrew is already installed: $brew_path"
+    if brew_path="$(yadem_brew_executable)"; then
+        yadem_say_and_log present "Homebrew is already installed: $brew_path"
         return
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-install "Would install Homebrew with:"
-        say "$install_command"
-        log_event would-run "$install_command"
+        yadem_say_and_log would-install "Would install Homebrew with:"
+        yadem_say "$install_command"
+        yadem_log_event would-run "$install_command"
         return
     fi
 
     if ! command -v curl >/dev/null 2>&1; then
-        say_and_log missing-curl "curl is required to install Homebrew"
+        yadem_say_and_log missing-curl "curl is required to install Homebrew"
         return 1
     fi
 
-    say_and_log installing "Installing Homebrew"
+    yadem_say_and_log installing "Installing Homebrew"
     /usr/bin/env bash -c \
         "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    log_event installed "Homebrew install command completed"
+    yadem_log_event installed "Homebrew install command completed"
 }
 
 # @description Previews Homebrew installation.

@@ -32,24 +32,24 @@ install() {
     local ruby_gem
 
     if [[ "$DRY_RUN" != true ]] && ! command -v gem >/dev/null 2>&1; then
-        say_and_log missing-rubygems "RubyGems is required to install gems"
+        yadem_say_and_log missing-rubygems "RubyGems is required to install gems"
         return 1
     fi
 
-    load_yadem_config
+    yadem_load_config
 
     if ((${#YADEM_GEMS[@]} == 0)); then
-        say_and_log skipped "No Ruby gems configured"
+        yadem_say_and_log skipped "No Ruby gems configured"
         return
     fi
 
     for ruby_gem in "${YADEM_GEMS[@]}"; do
         if [[ "$DRY_RUN" == true ]]; then
-            say_and_log would-install "Would install gem: $ruby_gem"
+            yadem_say_and_log would-install "Would install gem: $ruby_gem"
         else
-            say_and_log installing "Installing gem: $ruby_gem"
+            yadem_say_and_log installing "Installing gem: $ruby_gem"
             gem install "$ruby_gem"
-            log_event installed "Installed gem: $ruby_gem"
+            yadem_log_event installed "Installed gem: $ruby_gem"
         fi
     done
 }

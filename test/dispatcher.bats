@@ -199,15 +199,15 @@ setup() {
     cp "$(repo_root)/lib/yadem.sh" "$fixture/lib/yadem.sh"
     cat > "$fixture/targets/legacy-help.bash" <<'SH'
 install() {
-    say "install should not run"
+    yadem_say "install should not run"
 }
 
 dry_run() {
-    say "dry_run should not run"
+    yadem_say "dry_run should not run"
 }
 
 help() {
-    say "legacy help should not run"
+    yadem_say "legacy help should not run"
 }
 SH
     chmod +x "$fixture/bin/yadem"
@@ -243,12 +243,12 @@ dry_run() {
 }
 
 print_help() {
-    say "echo-args help"
+    yadem_say "echo-args help"
 }
 SH
     cat > "$fixture/targets/no-args.bash" <<'SH'
 install() {
-    say "no-args count: $#"
+    yadem_say "no-args count: $#"
 }
 
 dry_run() {
@@ -256,7 +256,7 @@ dry_run() {
 }
 
 print_help() {
-    say "no-args help"
+    yadem_say "no-args help"
 }
 SH
     printf "%s\n" "extensionless target should be ignored" > "$fixture/targets/extensionless"
@@ -323,24 +323,24 @@ SH
     mkdir -p "$target_dir"
     cat > "$target_dir/target-with-dry-run.bash" <<'SH'
 print_help() {
-    say "target-with-dry-run help"
+    yadem_say "target-with-dry-run help"
 }
 
 install() {
-    say "target-with-dry-run install should not run"
+    yadem_say "target-with-dry-run install should not run"
 }
 
 dry_run() {
-    say "target-with-dry-run dry_run sentinel"
+    yadem_say "target-with-dry-run dry_run sentinel"
 }
 SH
     cat > "$target_dir/target-without-dry-run.bash" <<'SH'
 print_help() {
-    say "target-without-dry-run help"
+    yadem_say "target-without-dry-run help"
 }
 
 install() {
-    say "target-without-dry-run install should not run"
+    yadem_say "target-without-dry-run install should not run"
 }
 SH
     export YADEM_TARGET_DIRS="$target_dir"
@@ -365,24 +365,24 @@ SH
     mkdir -p "$target_dir"
     cat > "$target_dir/target-with-install.bash" <<'SH'
 print_help() {
-    say "target-with-install help"
+    yadem_say "target-with-install help"
 }
 
 install() {
-    say "target-with-install install sentinel"
+    yadem_say "target-with-install install sentinel"
 }
 
 dry_run() {
-    say "target-with-install dry_run should not run"
+    yadem_say "target-with-install dry_run should not run"
 }
 SH
     cat > "$target_dir/target-without-install.bash" <<'SH'
 print_help() {
-    say "target-without-install help"
+    yadem_say "target-without-install help"
 }
 
 dry_run() {
-    say "target-without-install dry_run should not run"
+    yadem_say "target-without-install dry_run should not run"
 }
 SH
     export YADEM_TARGET_DIRS="$target_dir"
@@ -410,7 +410,7 @@ accepted_arguments() {
 }
 
 print_help() {
-    say "custom help"
+    yadem_say "custom help"
 }
 
 install() {
@@ -448,15 +448,15 @@ SH
     mkdir -p "$target_dir"
     cat > "$target_dir/external.bash" <<'SH'
 print_help() {
-    say "external help"
+    yadem_say "external help"
 }
 
 install() {
-    say "external install"
+    yadem_say "external install"
 }
 
 dry_run() {
-    say "external dry-run"
+    yadem_say "external dry-run"
 }
 SH
     export YADEM_TARGET_DIRS="$missing_dir:$not_dir:$target_dir"
@@ -480,15 +480,15 @@ SH
     mkdir -p "$target_dir"
     cat > "$target_dir/brew.bash" <<'SH'
 print_help() {
-    say "user brew help"
+    yadem_say "user brew help"
 }
 
 install() {
-    say "user brew install"
+    yadem_say "user brew install"
 }
 
 dry_run() {
-    say "user brew dry-run"
+    yadem_say "user brew dry-run"
 }
 SH
 

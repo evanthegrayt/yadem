@@ -38,7 +38,7 @@ yadem_target_dirs() {
 
     for target_dir in "${target_dirs[@]}"; do
         [[ -n "$target_dir" && -d "$target_dir" ]] || continue
-        if array_contains "$target_dir" "${seen_dirs[@]}"; then
+        if yadem_array_contains "$target_dir" "${seen_dirs[@]}"; then
             continue
         fi
 
@@ -52,7 +52,7 @@ yadem_target_dirs() {
 # @stdout Absolute target file path.
 # @exitcode 0 The target exists in the configured search path.
 # @exitcode 1 The target is missing or has an invalid path-like name.
-target_path_for() {
+yadem_target_path_for() {
     local target="$1"
     local target_dir
     local target_path
@@ -75,15 +75,15 @@ target_path_for() {
 # @arg $1 string Target name without `.bash`.
 # @exitcode 0 The target exists and is safe to load.
 # @exitcode 1 The target is missing or has an invalid path-like name.
-target_exists() {
-    target_path_for "$1" >/dev/null
+yadem_target_exists() {
+    yadem_target_path_for "$1" >/dev/null
 }
 
 # @description Lists available target names without the `.bash` extension.
 # @noargs
 # @stdout One target name per line.
 # @exitcode 0 Always.
-list_targets() {
+yadem_list_targets() {
     local target
     local target_dir
     local target_name
@@ -97,7 +97,7 @@ list_targets() {
             target_name="${target##*/}"
             # ${var%.bash} strips one trailing extension without touching the rest.
             target_name="${target_name%.bash}"
-            if array_contains "$target_name" "${seen_targets[@]}"; then
+            if yadem_array_contains "$target_name" "${seen_targets[@]}"; then
                 continue
             fi
 
@@ -111,7 +111,7 @@ list_targets() {
 # @noargs
 # @stdout One tab-separated target, path, and optional shadowed marker per line.
 # @exitcode 0 Always.
-list_targets_verbose() {
+yadem_list_targets_verbose() {
     local target
     local target_dir
     local target_name
@@ -125,7 +125,7 @@ list_targets_verbose() {
             target_name="${target_name%.bash}"
             status=""
 
-            if array_contains "$target_name" "${seen_targets[@]}"; then
+            if yadem_array_contains "$target_name" "${seen_targets[@]}"; then
                 status=$'\tshadowed'
             else
                 seen_targets+=("$target_name")
@@ -152,7 +152,7 @@ yadem_user_config_path() {
     printf "%s\n" "${YADEM_CONFIG:-$HOME/.yademrc}"
 }
 
-# @description Lists config files that load_yadem_config would source.
+# @description Lists config files that yadem_load_config would source.
 # @noargs
 # @stdout One active config path per line.
 # @exitcode 0 Always.
@@ -179,7 +179,7 @@ yadem_active_config_paths() {
 # @set YADEM_GEMS array Ruby gems used by the `gems` target.
 # @set YADEM_REPOS array Git repositories used by the `repos` target.
 # @exitcode 0 Configuration was loaded.
-load_yadem_config() {
+yadem_load_config() {
     local default_config
     local user_config
     local default_git_key_label
@@ -261,7 +261,7 @@ load_yadem_config() {
 # @arg $@ string Array values to search.
 # @exitcode 0 The value was found.
 # @exitcode 1 The value was not found.
-array_contains() {
+yadem_array_contains() {
     local needle="$1"
     local item
     shift
@@ -279,7 +279,7 @@ array_contains() {
 # @stdout Bare dotfile name, without a leading dot.
 # @exitcode 0 The name is non-empty and does not contain a slash.
 # @exitcode 1 The name is empty or contains a slash.
-dotfile_name_for() {
+yadem_dotfile_name_for() {
     local name="$1"
 
     # Remove at most one leading dot so users may pass either "zshrc" or ".zshrc".
@@ -295,14 +295,14 @@ dotfile_name_for() {
 # @arg $1 string Command name.
 # @exitcode 0 The command exists.
 # @exitcode 1 The command is missing.
-require_command() {
+yadem_require_command() {
     local command_name="$1"
 
     if command -v "$command_name" >/dev/null 2>&1; then
         return
     fi
 
-    say_and_log missing-command "$command_name is required"
+    yadem_say_and_log missing-command "$command_name is required"
     return 1
 }
 
@@ -310,7 +310,7 @@ require_command() {
 # @arg $1 string Repository URL.
 # @stdout Repository URL ending in `.git`.
 # @exitcode 0 Always.
-git_clone_url_for() {
+yadem_git_clone_url_for() {
     local repo="$1"
 
     if [[ "$repo" != *.git ]]; then
@@ -340,24 +340,24 @@ yadem_copy_file_if_missing() {
     local destination="$2"
 
     if [[ ! -f "$source" ]]; then
-        say_and_log missing-source "Source file not found: $source"
+        yadem_say_and_log missing-source "Source file not found: $source"
         return 1
     fi
 
     # `-L` is checked with `-e` so a broken destination symlink is still preserved.
     if [[ -e "$destination" || -L "$destination" ]]; then
-        say_and_log skipped-existing "Skipped existing path: $destination"
+        yadem_say_and_log skipped-existing "Skipped existing path: $destination"
         return
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-copy "Would copy $source to $destination"
+        yadem_say_and_log would-copy "Would copy $source to $destination"
         return
     fi
 
     yadem_ensure_dir "$(dirname -- "$destination")" || return
     cp -p "$source" "$destination"
-    say_and_log copied "Copied $source to $destination"
+    yadem_say_and_log copied "Copied $source to $destination"
 }
 
 # @description Clones a Git repository only when the destination is missing.
@@ -376,21 +376,21 @@ yadem_clone_repo_if_missing() {
 
     # Treat any existing path, including a broken symlink, as user-owned.
     if [[ -e "$directory" || -L "$directory" ]]; then
-        say_and_log present "$name already exists: $directory"
+        yadem_say_and_log present "$name already exists: $directory"
         return
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-clone "Would clone $repo to $directory"
+        yadem_say_and_log would-clone "Would clone $repo to $directory"
         return
     fi
 
-    require_command git || return
+    yadem_require_command git || return
     if [[ "$recursive" == true ]]; then
         clone_args+=(--recursive)
     fi
 
-    say_and_log cloning "Cloning $repo to $directory"
+    yadem_say_and_log cloning "Cloning $repo to $directory"
     git "${clone_args[@]}" "$repo" "$directory"
 }
 
@@ -418,16 +418,16 @@ yadem_prepare_destination() {
 
     if [[ "$force" != true ]]; then
         # Return 2 is a non-error sentinel: callers usually stop without failing.
-        say_and_log present "$present_message"
+        yadem_say_and_log present "$present_message"
         return 2
     fi
 
     if [[ -L "$directory" ]]; then
         if [[ "$DRY_RUN" == true ]]; then
-            say_and_log would-replace-link "Would replace symlink: $directory"
+            yadem_say_and_log would-replace-link "Would replace symlink: $directory"
         else
             rm -- "$directory"
-            say_and_log replaced-link "Replaced symlink: $directory"
+            yadem_say_and_log replaced-link "Replaced symlink: $directory"
         fi
         return
     fi
@@ -436,23 +436,23 @@ yadem_prepare_destination() {
         # A supplied backup name lets targets group paths such as
         # ~/.oh-my-zsh/custom under a cleaner logical backup prefix.
         if [[ -n "$backup_name" ]]; then
-            backup="$(backup_path_for_name "$backup_name")"
+            backup="$(yadem_backup_path_for_name "$backup_name")"
         else
-            backup="$(backup_path_for "$directory")"
+            backup="$(yadem_backup_path_for "$directory")"
         fi
 
         if [[ "$DRY_RUN" == true ]]; then
-            say_and_log would-back-up "Would back up $directory to $backup"
+            yadem_say_and_log would-back-up "Would back up $directory to $backup"
         else
             yadem_ensure_dir "$INSTALL_CACHE_DIR" || return
             mv -- "$directory" "$backup"
-            say_and_log backed-up "Backed up $directory to $backup"
+            yadem_say_and_log backed-up "Backed up $directory to $backup"
         fi
         return
     fi
 
     # Uncommon filesystem types are neither removed nor backed up automatically.
-    say_and_log skipped-existing "Skipped existing path: $directory"
+    yadem_say_and_log skipped-existing "Skipped existing path: $directory"
     return 2
 }
 
@@ -461,7 +461,7 @@ yadem_prepare_destination() {
 # @exitcode 0 The dotfiles source directory exists.
 # @exitcode 1 Configuration is invalid or cloning failed.
 # @exitcode 2 Dry-run reported a missing source clone.
-ensure_dotfiles_source() {
+yadem_ensure_dotfiles_source() {
     local clone_url
 
     if [[ -d "$YADEM_DOTFILES_DIR" ]]; then
@@ -469,44 +469,44 @@ ensure_dotfiles_source() {
     fi
 
     if [[ -z "$YADEM_DOTFILES_REPO" ]]; then
-        say_and_log missing-dotfiles-repo "YADEM_DOTFILES_REPO is not configured"
+        yadem_say_and_log missing-dotfiles-repo "YADEM_DOTFILES_REPO is not configured"
         return 1
     fi
 
-    clone_url="$(git_clone_url_for "$YADEM_DOTFILES_REPO")"
+    clone_url="$(yadem_git_clone_url_for "$YADEM_DOTFILES_REPO")"
 
     if [[ "$DRY_RUN" == true ]]; then
         # Dry-run cannot clone, so distinguish "would clone" from hard failures
         # with the non-error sentinel status 2.
         if [[ -e "$YADEM_DOTFILES_REPO_DIR" && ! -d "$YADEM_DOTFILES_REPO_DIR/.git" ]]; then
-            say_and_log invalid-dotfiles-repo-dir "Dotfiles repository path exists but is not a git repository: $YADEM_DOTFILES_REPO_DIR"
+            yadem_say_and_log invalid-dotfiles-repo-dir "Dotfiles repository path exists but is not a git repository: $YADEM_DOTFILES_REPO_DIR"
             return 1
         fi
 
         if [[ -d "$YADEM_DOTFILES_REPO_DIR/.git" ]]; then
-            say_and_log missing-dotfiles-dir "Dotfiles directory not found in repository: $YADEM_DOTFILES_DIR"
+            yadem_say_and_log missing-dotfiles-dir "Dotfiles directory not found in repository: $YADEM_DOTFILES_DIR"
             return 1
         fi
 
-        say_and_log would-clone "Would clone $clone_url to $YADEM_DOTFILES_REPO_DIR"
+        yadem_say_and_log would-clone "Would clone $clone_url to $YADEM_DOTFILES_REPO_DIR"
         return 2
     fi
 
-    require_command git || return
+    yadem_require_command git || return
 
     if [[ -e "$YADEM_DOTFILES_REPO_DIR" && ! -d "$YADEM_DOTFILES_REPO_DIR/.git" ]]; then
-        say_and_log invalid-dotfiles-repo-dir "Dotfiles repository path exists but is not a git repository: $YADEM_DOTFILES_REPO_DIR"
+        yadem_say_and_log invalid-dotfiles-repo-dir "Dotfiles repository path exists but is not a git repository: $YADEM_DOTFILES_REPO_DIR"
         return 1
     fi
 
     if [[ ! -d "$YADEM_DOTFILES_REPO_DIR/.git" ]]; then
         yadem_ensure_dir "$(dirname -- "$YADEM_DOTFILES_REPO_DIR")" || return
-        say_and_log cloning "Cloning $clone_url to $YADEM_DOTFILES_REPO_DIR"
+        yadem_say_and_log cloning "Cloning $clone_url to $YADEM_DOTFILES_REPO_DIR"
         git clone "$clone_url" "$YADEM_DOTFILES_REPO_DIR"
     fi
 
     if [[ ! -d "$YADEM_DOTFILES_DIR" ]]; then
-        say_and_log missing-dotfiles-dir "Dotfiles directory not found after clone: $YADEM_DOTFILES_DIR"
+        yadem_say_and_log missing-dotfiles-dir "Dotfiles directory not found after clone: $YADEM_DOTFILES_DIR"
         return 1
     fi
 }
@@ -516,7 +516,7 @@ ensure_dotfiles_source() {
 # @stdout Absolute brew executable path.
 # @exitcode 0 A brew executable was found.
 # @exitcode 1 Homebrew was not found.
-brew_executable() {
+yadem_brew_executable() {
     local brew_path
 
     if command -v brew >/dev/null 2>&1; then
@@ -540,7 +540,7 @@ brew_executable() {
 # @set INSTALL_LOG_WRITTEN boolean True after any successful log write.
 # @set INSTALL_LOG_FAILED boolean True after the first failed log write.
 # @exitcode 0 The function never fails callers because logging is best-effort.
-log_event() {
+yadem_log_event() {
     local action="$1"
     shift
 
@@ -561,7 +561,7 @@ log_event() {
 # @arg $@ string Message words.
 # @stdout The joined message followed by a newline.
 # @exitcode 0 The message was printed.
-say() {
+yadem_say() {
     printf "%s\n" "$*"
 }
 
@@ -569,19 +569,19 @@ say() {
 # @arg $1 string Log action key.
 # @arg $@ string Message words to print and log.
 # @exitcode 0 The message was printed; logging remains best-effort.
-say_and_log() {
+yadem_say_and_log() {
     local action="$1"
     shift
 
-    say "$*"
-    log_event "$action" "$*"
+    yadem_say "$*"
+    yadem_log_event "$action" "$*"
 }
 
 # @description Summarizes whether this process wrote an install log.
 # @noargs
 # @stdout A short sentence suitable for final target output.
 # @exitcode 0 Always.
-log_status_message() {
+yadem_log_status_message() {
     if [[ "$INSTALL_LOG_WRITTEN" == true ]]; then
         printf "Log written to %s\n" "$INSTALL_LOG"
     elif [[ "$INSTALL_LOG_FAILED" == true ]]; then
@@ -595,20 +595,20 @@ log_status_message() {
 # @arg $1 string Path whose basename should be used for the backup.
 # @stdout Unique backup path under `INSTALL_CACHE_DIR`.
 # @exitcode 0 Always.
-backup_path_for() {
+yadem_backup_path_for() {
     local target="$1"
     # Strip directory and one leading dot so ~/.zshrc backs up as zshrc.DATE.
     local name="${target##*/}"
 
     name="${name#.}"
-    backup_path_for_name "$name"
+    yadem_backup_path_for_name "$name"
 }
 
 # @description Builds the next backup path for a logical backup name.
 # @arg $1 string Backup basename.
 # @stdout Unique backup path under `INSTALL_CACHE_DIR`.
 # @exitcode 0 Always.
-backup_path_for_name() {
+yadem_backup_path_for_name() {
     local name="$1"
     local backup
     local counter

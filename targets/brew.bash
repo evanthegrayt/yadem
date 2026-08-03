@@ -35,19 +35,19 @@ install() {
     local brew_path
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-install "Would install Homebrew packages from the global Brewfile"
+        yadem_say_and_log would-install "Would install Homebrew packages from the global Brewfile"
         return
     fi
 
-    if ! brew_path="$(brew_executable)"; then
-        say_and_log missing-homebrew "Homebrew is required to install packages from the global Brewfile"
-        say "Install Homebrew first with: bin/yadem homebrew"
+    if ! brew_path="$(yadem_brew_executable)"; then
+        yadem_say_and_log missing-homebrew "Homebrew is required to install packages from the global Brewfile"
+        yadem_say "Install Homebrew first with: bin/yadem homebrew"
         return 1
     fi
 
-    say_and_log installing "Installing Homebrew packages from the global Brewfile"
+    yadem_say_and_log installing "Installing Homebrew packages from the global Brewfile"
     "$brew_path" bundle install --global
-    log_event installed "Homebrew packages installed from the global Brewfile"
+    yadem_log_event installed "Homebrew packages installed from the global Brewfile"
 }
 
 # @description Previews Brewfile package installation.

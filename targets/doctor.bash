@@ -158,7 +158,7 @@ install() {
     local found_active_config=false
     local found_target_dir=false
 
-    load_yadem_config
+    yadem_load_config
 
     default_config="$(yadem_default_config_path)"
     user_config="$(yadem_user_config_path)"

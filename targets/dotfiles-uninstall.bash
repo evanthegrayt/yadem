@@ -84,7 +84,7 @@ newest_backup_for() {
         # Keep broken symlink backups visible instead of letting `-e` hide them.
         [[ -e "$backup" || -L "$backup" ]] || continue
         # [[ a > b ]] is a lexicographic comparison, which works for the
-        # YYYY-MM-DD backup suffixes used by backup_path_for_name.
+        # YYYY-MM-DD backup suffixes used by yadem_backup_path_for_name.
         if [[ -z "$newest" || "$backup" > "$newest" ]]; then
             newest="$backup"
         fi
@@ -105,13 +105,13 @@ restore_backup_for() {
 
     if backup="$(newest_backup_for "$name")"; then
         if [[ "$DRY_RUN" == true ]]; then
-            say_and_log would-restore "Would restore $target from $backup"
+            yadem_say_and_log would-restore "Would restore $target from $backup"
         else
             mv -- "$backup" "$target"
-            say_and_log restored "Restored $target from $backup"
+            yadem_say_and_log restored "Restored $target from $backup"
         fi
     else
-        say_and_log no-backup "No backup found for $name in $INSTALL_CACHE_DIR"
+        yadem_say_and_log no-backup "No backup found for $name in $INSTALL_CACHE_DIR"
     fi
 }
 
@@ -126,21 +126,21 @@ uninstall_dotfile() {
     local link_target
 
     if ! [[ -L "$target" ]]; then
-        say_and_log skipped-no-symlink "$target is not a symlink. Skipping."
+        yadem_say_and_log skipped-no-symlink "$target is not a symlink. Skipping."
         return
     fi
 
     link_target="$(readlink_target_for "$target")"
     if ! symlink_points_into_dotfiles_dir "$target"; then
-        say_and_log skipped-unmanaged "Skipped unmanaged symlink: $target -> $link_target"
+        yadem_say_and_log skipped-unmanaged "Skipped unmanaged symlink: $target -> $link_target"
         return
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say_and_log would-remove-link "Would remove symlink: $target -> $link_target"
+        yadem_say_and_log would-remove-link "Would remove symlink: $target -> $link_target"
     else
         rm -- "$target"
-        say_and_log removed-link "Removed symlink: $target -> $link_target"
+        yadem_say_and_log removed-link "Removed symlink: $target -> $link_target"
     fi
 
     if [[ "$restore" == true ]]; then
@@ -171,7 +171,7 @@ uninstall_all_dotfiles() {
     done
 
     if [[ "$found" != true ]]; then
-        say_and_log no-managed-symlinks "No dotfile symlinks into $YADEM_DOTFILES_DIR found in $HOME"
+        yadem_say_and_log no-managed-symlinks "No dotfile symlinks into $YADEM_DOTFILES_DIR found in $HOME"
     fi
 }
 
@@ -184,7 +184,7 @@ install() {
     local single_file=""
     local name
 
-    load_yadem_config
+    yadem_load_config
 
     while (($#)); do
         case "$1" in
@@ -196,12 +196,12 @@ install() {
                 return
                 ;;
             -*)
-                say_and_log invalid-option "Invalid option for dotfiles-uninstall: $1"
+                yadem_say_and_log invalid-option "Invalid option for dotfiles-uninstall: $1"
                 return 1
                 ;;
             *)
                 if [[ -n "$single_file" ]]; then
-                    say_and_log too-many-files "Only one dotfile can be uninstalled at a time"
+                    yadem_say_and_log too-many-files "Only one dotfile can be uninstalled at a time"
                     return 1
                 fi
                 single_file="$1"
@@ -211,8 +211,8 @@ install() {
     done
 
     if [[ -n "$single_file" ]]; then
-        if ! name="$(dotfile_name_for "$single_file")"; then
-            say_and_log invalid-dotfile "Invalid dotfile name: $single_file"
+        if ! name="$(yadem_dotfile_name_for "$single_file")"; then
+            yadem_say_and_log invalid-dotfile "Invalid dotfile name: $single_file"
             return 1
         fi
         uninstall_dotfile "$name" "$restore"
@@ -221,9 +221,9 @@ install() {
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        say "Dry run complete. $(log_status_message)"
+        yadem_say "Dry run complete. $(yadem_log_status_message)"
     else
-        say "Done. $(log_status_message)"
+        yadem_say "Done. $(yadem_log_status_message)"
     fi
 }
 

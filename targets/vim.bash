@@ -45,7 +45,7 @@ install() {
     local force=false
     local destination_status
 
-    load_yadem_config
+    yadem_load_config
 
     while (($#)); do
         case "$1" in
@@ -57,11 +57,11 @@ install() {
                 force=true
                 ;;
             -*)
-                say_and_log invalid-option "Invalid option for vim: $1"
+                yadem_say_and_log invalid-option "Invalid option for vim: $1"
                 return 1
                 ;;
             *)
-                say_and_log invalid-argument "Invalid argument for vim: $1"
+                yadem_say_and_log invalid-argument "Invalid argument for vim: $1"
                 return 1
                 ;;
         esac
@@ -84,7 +84,7 @@ install() {
     if [[ "$DRY_RUN" == true ]]; then
         # Dry-run force mode leaves ~/.vim in place, but the real install would
         # remove or back it up before cloning.
-        say_and_log would-clone "Would clone $YADEM_VIM_REPO to $HOME/.vim"
+        yadem_say_and_log would-clone "Would clone $YADEM_VIM_REPO to $HOME/.vim"
         return
     fi
 

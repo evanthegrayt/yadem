@@ -54,13 +54,13 @@ run_repo_builds() {
     fi
 
     if [[ -f "$repo_path/Rakefile" ]]; then
-        say_and_log running-rake "Running rake in $repo_path"
+        yadem_say_and_log running-rake "Running rake in $repo_path"
         # Use a subshell so the caller's working directory never changes.
         (cd "$repo_path" && rake)
     fi
 
     if [[ -f "$repo_path/Makefile" ]]; then
-        say_and_log running-make "Running make in $repo_path"
+        yadem_say_and_log running-make "Running make in $repo_path"
         # Use a subshell so the caller's working directory never changes.
         (cd "$repo_path" && make)
     fi
@@ -76,35 +76,35 @@ install() {
     local repo_path
     local clone_url
 
-    load_yadem_config
+    yadem_load_config
 
     # ${#array[@]} is the number of configured array entries.
     if ((${#YADEM_REPOS[@]} == 0)); then
-        say_and_log skipped "No git repositories configured"
+        yadem_say_and_log skipped "No git repositories configured"
         return
     fi
 
     if [[ "$DRY_RUN" != true ]]; then
-        require_command git || return
+        yadem_require_command git || return
         mkdir -p "$YADEM_REPOS_DIR"
     fi
 
     for repo in "${YADEM_REPOS[@]}"; do
         repo_name="$(repo_name_for "$repo")"
         repo_path="$YADEM_REPOS_DIR/$repo_name"
-        clone_url="$(git_clone_url_for "$repo")"
+        clone_url="$(yadem_git_clone_url_for "$repo")"
 
         if [[ -d "$repo_path/.git" ]]; then
-            say_and_log present "Repository already cloned: $repo_path"
+            yadem_say_and_log present "Repository already cloned: $repo_path"
             continue
         fi
 
         if [[ "$DRY_RUN" == true ]]; then
-            say_and_log would-clone "Would clone $clone_url to $repo_path"
+            yadem_say_and_log would-clone "Would clone $clone_url to $repo_path"
             continue
         fi
 
-        say_and_log cloning "Cloning $clone_url to $repo_path"
+        yadem_say_and_log cloning "Cloning $clone_url to $repo_path"
         git clone "$clone_url" "$repo_path"
         run_repo_builds "$repo_path"
     done

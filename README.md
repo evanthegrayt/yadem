@@ -155,18 +155,21 @@ example target, see [`docs/targets.md`](docs/targets.md).
 
 Shared target helpers live in `lib/yadem.sh`. Target authors should prefer
 these helpers when they fit instead of reimplementing common shell behavior.
+Shared helper names start with `yadem_`; bare function names are reserved for
+the target contract (`print_help`, `install`, `dry_run`, and
+`accepted_arguments`).
 Current helpers include:
 
-- `load_yadem_config`: load defaults and user overrides
-- `say` and `say_and_log`: print consistent target output
-- `require_command`: fail clearly when an executable is missing
-- `array_contains`: check membership in Bash arrays
-- `git_clone_url_for`: normalize repository clone URLs
+- `yadem_load_config`: load defaults and user overrides
+- `yadem_say` and `yadem_say_and_log`: print consistent target output
+- `yadem_require_command`: fail clearly when an executable is missing
+- `yadem_array_contains`: check membership in Bash arrays
+- `yadem_git_clone_url_for`: normalize repository clone URLs
 - `yadem_ensure_dir`: create a directory when missing
 - `yadem_copy_file_if_missing`: copy a file without overwriting
 - `yadem_clone_repo_if_missing`: clone a Git repository when the destination is missing
 - `yadem_prepare_destination`: preserve, replace, or back up an existing path
-- `backup_path_for` and `backup_path_for_name`: choose non-clobbering backup paths
+- `yadem_backup_path_for` and `yadem_backup_path_for_name`: choose non-clobbering backup paths
 
 The DSL is intentionally small. New helpers should earn their place by removing
 real duplication or making target code safer for people who do not know every
@@ -198,7 +201,7 @@ substitution:
 # @description Builds the target path for a target name.
 # @arg $1 string Target name without `.bash`.
 # @stdout Absolute target file path.
-target_path_for() {
+yadem_target_path_for() {
     :
 }
 ```
