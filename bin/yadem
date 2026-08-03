@@ -33,11 +33,13 @@ SCRIPT_PATH="$(resolve_script_path "${BASH_SOURCE[0]}")"
 readonly SCRIPT_PATH
 SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd -P)"
 readonly SCRIPT_DIR
+REPO_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd -P)"
+readonly REPO_DIR
 # shellcheck disable=SC2034 # Kept as the resolved built-in target directory.
-readonly TARGET_DIR="$SCRIPT_DIR/yadem.d"
-readonly LIB_PATH="$SCRIPT_DIR/lib/yadem.sh"
+readonly TARGET_DIR="$REPO_DIR/targets"
+readonly LIB_PATH="$REPO_DIR/lib/yadem.sh"
 
-# shellcheck source=bin/lib/yadem.sh
+# shellcheck source=lib/yadem.sh
 . "$LIB_PATH"
 
 # @description Prints global command usage.
@@ -94,7 +96,7 @@ target_argument_usage() {
     # Source target metadata in a subshell so helper functions or variables from
     # one target cannot leak into global help generation for the next target.
     (
-        # shellcheck source=bin/lib/yadem.sh
+        # shellcheck source=lib/yadem.sh
         . "$LIB_PATH"
         # shellcheck disable=SC1090
         . "$target_path"
@@ -155,7 +157,7 @@ run_target() {
         # shellcheck disable=SC2034
         DRY_RUN="$dry_run"
 
-        # shellcheck source=bin/lib/yadem.sh
+        # shellcheck source=lib/yadem.sh
         . "$LIB_PATH"
         # shellcheck disable=SC1090
         . "$target_path"

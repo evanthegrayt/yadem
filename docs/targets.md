@@ -18,7 +18,7 @@ By default, yadem searches for target files in this order:
 
 ```text
 ${XDG_CONFIG_HOME:-$HOME/.config}/yadem/yadem.d
-bin/yadem.d
+targets
 ```
 
 Set `YADEM_TARGET_DIRS` to a colon-separated list to use one or more external
@@ -121,7 +121,7 @@ target does before showing implementation details.
 
 ## Shared Helpers And Variables
 
-yadem sources `bin/lib/yadem.sh` before it sources the target. The helper file
+yadem sources `lib/yadem.sh` before it sources the target. The helper file
 sets common variables and exposes a small target DSL.
 
 Use `load_yadem_config` near the start of `install()` when a target reads
@@ -190,7 +190,7 @@ paths, repositories, commands, and skipped work, and it should not modify files,
 create directories, install packages, change shell settings, or call APIs with
 side effects.
 
-Prefer helpers from `bin/lib/yadem.sh` for common operations such as safe
+Prefer helpers from `lib/yadem.sh` for common operations such as safe
 directory creation, copy-if-missing behavior, clone-if-missing behavior, backup
 path selection, and consistent output. Add a new shared helper only when it is
 useful across targets.

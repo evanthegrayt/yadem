@@ -10,6 +10,7 @@ _yadem() {
 
     local cmd
     local script_dir
+    local repo_dir
     local install_target_dir
     local user_target_dir
     local configured_target_dirs
@@ -30,7 +31,8 @@ _yadem() {
         script_dir="${commands[$cmd]:A:h}"
     fi
 
-    install_target_dir="$script_dir/yadem.d"
+    repo_dir="${script_dir:h}"
+    install_target_dir="$repo_dir/targets"
     user_target_dir="${XDG_CONFIG_HOME:-$HOME/.config}/yadem/yadem.d"
     configured_target_dirs="${YADEM_TARGET_DIRS:-$user_target_dir}"
     target_dirs=("${(@s.:.)configured_target_dirs}" "$install_target_dir")

@@ -9,6 +9,7 @@ _yadem_completion() {
     local cur
     local cmd
     local script_dir
+    local repo_dir
     local install_target_dir
     local user_target_dir
     local configured_target_dirs
@@ -56,7 +57,8 @@ _yadem_completion() {
         script_dir="$(_yadem_resolve_script_dir "$(command -v "$cmd" 2>/dev/null)")" || script_dir=""
     fi
 
-    install_target_dir="$script_dir/yadem.d"
+    repo_dir="$(cd -- "$script_dir/.." >/dev/null 2>&1 && pwd -P)" || repo_dir=""
+    install_target_dir="$repo_dir/targets"
     user_target_dir="${XDG_CONFIG_HOME:-$HOME/.config}/yadem/yadem.d"
     configured_target_dirs="${YADEM_TARGET_DIRS:-$user_target_dir}"
     old_ifs="$IFS"

@@ -70,7 +70,7 @@ setup() {
     run_yadem --edit dotfiles
 
     assert_success
-    [[ "$output" == "configured:$(repo_root)/bin/yadem.d/dotfiles.bash" ]]
+    [[ "$output" == "configured:$(repo_root)/targets/dotfiles.bash" ]]
 }
 
 @test "YADEM_CONFIG can point to an arbitrary config filename" {
@@ -83,7 +83,7 @@ setup() {
 
     assert_success
     [[ "${TEST_YADEM_CONFIG##*/}" != *yademrc* ]]
-    [[ "$output" == "configured:$(repo_root)/bin/yadem.d/dotfiles.bash" ]]
+    [[ "$output" == "configured:$(repo_root)/targets/dotfiles.bash" ]]
 }
 
 @test "user config defaults to HOME yademrc when YADEM_CONFIG is unset" {
@@ -96,7 +96,7 @@ setup() {
     run_yadem --edit dotfiles
 
     assert_success
-    [[ "$output" == "configured:$(repo_root)/bin/yadem.d/dotfiles.bash" ]]
+    [[ "$output" == "configured:$(repo_root)/targets/dotfiles.bash" ]]
 }
 
 @test "HOME yademrc overrides repo scalar defaults" {
@@ -121,7 +121,7 @@ setup() {
     run_yadem --edit dotfiles
 
     assert_success
-    [[ "$output" == "configured:$(repo_root)/bin/yadem.d/dotfiles.bash" ]]
+    [[ "$output" == "configured:$(repo_root)/targets/dotfiles.bash" ]]
 }
 
 @test "repo config fills values left unset by user config" {
@@ -149,21 +149,21 @@ setup() {
     run_yadem --edit brew
 
     assert_success
-    [[ "$output" == "visual:$(repo_root)/bin/yadem.d/brew.bash" ]]
+    [[ "$output" == "visual:$(repo_root)/targets/brew.bash" ]]
 
     export VISUAL=""
     export EDITOR="$editor_editor"
     run_yadem --edit brew
 
     assert_success
-    [[ "$output" == "editor:$(repo_root)/bin/yadem.d/brew.bash" ]]
+    [[ "$output" == "editor:$(repo_root)/targets/brew.bash" ]]
 
     export VISUAL=""
     export EDITOR=""
     PATH="$fake_bin:$PATH" run_yadem --edit brew
 
     assert_success
-    [[ "$output" == "vi:$(repo_root)/bin/yadem.d/brew.bash" ]]
+    [[ "$output" == "vi:$(repo_root)/targets/brew.bash" ]]
 }
 
 @test "--edit validates target shape before opening an editor" {
@@ -182,7 +182,7 @@ setup() {
 @test "built-in targets implement print_help without defining help" {
     local target
 
-    for target in "$(repo_root)"/bin/yadem.d/*.bash; do
+    for target in "$(repo_root)"/targets/*.bash; do
         [[ -f "$target" ]] || continue
         [[ "$(grep -E -m 1 '^[[:alnum:]_]+\(\) \{' "$target")" == "print_help() {" ]]
         ! grep -E '^help\(\) \{' "$target" >/dev/null
@@ -194,10 +194,10 @@ setup() {
 @test "target help requires print_help and does not fall back to help builtin" {
     local fixture="$BATS_TEST_TMPDIR/interface-fixture.$BATS_TEST_NUMBER"
 
-    mkdir -p "$fixture/bin/lib" "$fixture/bin/yadem.d"
+    mkdir -p "$fixture/bin" "$fixture/lib" "$fixture/targets"
     cp "$(repo_root)/bin/yadem" "$fixture/bin/yadem"
-    cp "$(repo_root)/bin/lib/yadem.sh" "$fixture/bin/lib/yadem.sh"
-    cat > "$fixture/bin/yadem.d/legacy-help.bash" <<'SH'
+    cp "$(repo_root)/lib/yadem.sh" "$fixture/lib/yadem.sh"
+    cat > "$fixture/targets/legacy-help.bash" <<'SH'
 install() {
     say "install should not run"
 }
@@ -224,10 +224,10 @@ SH
 @test "target args are opt-in through accepted_arguments" {
     local fixture="$BATS_TEST_TMPDIR/args-fixture.$BATS_TEST_NUMBER"
 
-    mkdir -p "$fixture/bin/lib" "$fixture/bin/yadem.d"
+    mkdir -p "$fixture/bin" "$fixture/lib" "$fixture/targets"
     cp "$(repo_root)/bin/yadem" "$fixture/bin/yadem"
-    cp "$(repo_root)/bin/lib/yadem.sh" "$fixture/bin/lib/yadem.sh"
-    cat > "$fixture/bin/yadem.d/echo-args.bash" <<'SH'
+    cp "$(repo_root)/lib/yadem.sh" "$fixture/lib/yadem.sh"
+    cat > "$fixture/targets/echo-args.bash" <<'SH'
 accepted_arguments() {
     printf "%s\n" "[ARG...]"
 }
@@ -246,7 +246,7 @@ print_help() {
     say "echo-args help"
 }
 SH
-    cat > "$fixture/bin/yadem.d/no-args.bash" <<'SH'
+    cat > "$fixture/targets/no-args.bash" <<'SH'
 install() {
     say "no-args count: $#"
 }
@@ -259,7 +259,7 @@ print_help() {
     say "no-args help"
 }
 SH
-    printf "%s\n" "extensionless target should be ignored" > "$fixture/bin/yadem.d/extensionless"
+    printf "%s\n" "extensionless target should be ignored" > "$fixture/targets/extensionless"
     chmod +x "$fixture/bin/yadem"
 
     HOME="$TEST_HOME" XDG_CACHE_HOME="$TEST_CACHE" run "$fixture/bin/yadem" echo-args --flag value
@@ -523,7 +523,7 @@ SH
     assert_output_contains "custom"
     assert_output_contains "brew"
     assert_output_not_contains "$target_dir/custom.bash"
-    assert_output_not_contains "$(repo_root)/bin/yadem.d/brew.bash"
+    assert_output_not_contains "$(repo_root)/targets/brew.bash"
 }
 
 @test "verbose list shows resolved built-in and user target paths" {
@@ -536,7 +536,7 @@ SH
 
     assert_success
     assert_output_contains $'custom\t'"$target_dir/custom.bash"
-    assert_output_contains $'brew\t'"$(repo_root)/bin/yadem.d/brew.bash"
+    assert_output_contains $'brew\t'"$(repo_root)/targets/brew.bash"
     assert_output_not_contains "shadowed"
 }
 
@@ -552,7 +552,7 @@ SH
     assert_success
     first_brew="$(grep -m 1 $'^brew\t' <<< "$output")"
     [[ "$first_brew" == $'brew\t'"$target_dir/brew.bash" ]]
-    assert_output_contains $'brew\t'"$(repo_root)/bin/yadem.d/brew.bash"$'\tshadowed'
+    assert_output_contains $'brew\t'"$(repo_root)/targets/brew.bash"$'\tshadowed'
 }
 
 @test "--verbose requires --list" {
